@@ -1,0 +1,342 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ICLOGIN_DIALOG DIALOGEX 0, 0, 240, 82
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "iclogin <loc>"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,183,7,50,14
+    PUSHBUTTON      "Login <loc>",IDC_LOGINBUTTON,7,7,50,14
+    PUSHBUTTON      "Logout <loc>",IDC_LOGOUTBUTTON,7,23,50,14
+    LTEXT           "*messagetext*",IDC_MESSAGETEXT,63,26,160,8
+    LTEXT           "*messagetext*",IDC_MESSAGETEXT2,63,39,163,8
+    PUSHBUTTON      "Config <l>",IDC_CONFIGUREBUTTON,71,7,50,14
+    ICON            IDI_QUESTIONICON,IDC_STATUSICON,20,39,21,20
+    LTEXT           "logged_in_time <loc>",IDC_LOGGEDINTIME,7,64,107,11
+    LTEXT           "logged_out_time <loc>",IDC_LOGGEDOUTTIME,118,64,115,11
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,3,0,0
+ PRODUCTVERSION 0,3,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "Daniel Bratell\0"
+            VALUE "FileDescription", "IC Login\0"
+            VALUE "FileVersion", "0, 3, 0, 0\0"
+            VALUE "InternalName", "iclogin\0"
+            VALUE "LegalCopyright", "Copyright (C) 2000\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "iclogin.EXE\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "IC Login\0"
+            VALUE "ProductVersion", "beta0.3\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ICLOGIN_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 233
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 75
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_POPUP_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "Login",                       IDC_LOGINBUTTON
+        MENUITEM "Logout",                      IDC_LOGOUTBUTTON
+        MENUITEM "Quit",                        IDOK
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
+    IDS_LOGINSTARTED        "Login started..."
+    IDS_LOGINFAILED         "Login failed!"
+    IDS_LOGINSUCCEEDED      "You are logged in!"
+    IDS_LOGOUTSTARTED       "Logout started..."
+    IDS_LOGOUTFAILED        "Logout failed!"
+    IDS_LOGOUTSUCCEEDED     "You are logged out!"
+    IDS_LOGINALREADYLOGIN   "You are already logged in."
+    IDS_LOGINBUTTONTEXT     "&Login"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LOGOUTBUTTONTEXT    "L&ogout"
+    IDS_QUITBUTTONTEXT      "&Quit"
+    IDS_RESOLVING           "Resolving host"
+    IDS_CONNECTING          "Connecting to"
+    IDS_SENDINGREQUEST      "Sending request..."
+    IDS_SENTREQUEST         "Waiting for response..."
+    IDS_RECEIVINGRESPONSE   "Server answered..."
+    IDS_CONFIGDIALOGTITLE   "Configure IC Login"
+    IDS_USERNAMELABEL       "User Name:"
+    IDS_PASSWORDLABEL       "Password:"
+    IDS_HIDEPASSWORDLABEL   "Hide password"
+    IDS_LOGINATSTARTUPLABEL "Login at startup"
+    IDS_LOGINATINTERVALLABEL "Login every"
+    IDS_LOGINATINTERVALUNIT "minute(s)."
+    IDS_CONFIGUREBUTTONTEXT "Configure..."
+    IDS_INCORRECTLOGININTERVAL 
+                            "The login interval must be a positive integer."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DIALOGTITLE         "IC Login"
+    IDS_LOGGEDINTIMEPREFIX  "Logged in:"
+    IDS_LOGGEDOUTTIMEPREFIX "Logged out:"
+    IDS_WRONGINTERVALVALUE  "The interval must be a number between 1 and 10000."
+    IDS_NOCOMMONMESSAGE     "Couldn't get common message. Quiting."
+    IDS_STARTHIDDEN         "Start hidden"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Swedish resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_SVE)
+#ifdef _WIN32
+LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\iclogin.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\iclogin.ico"
+IDI_TRAYICON            ICON    DISCARDABLE     "res\\trayicon.ico"
+IDI_HAPPY               ICON    DISCARDABLE     "res\\happy.ico"
+IDI_SAD                 ICON    DISCARDABLE     "res\\sad.ico"
+IDI_QUESTIONICON        ICON    DISCARDABLE     "res\\question.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_CONFIGURATION DIALOG DISCARDABLE  0, 0, 264, 103
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Config <localize>"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,207,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,207,24,50,14
+    CONTROL         "loginatstartup <local>",IDC_LOGINATSTARTUPCHECKBOX,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,58,83,10
+    EDITTEXT        IDC_USERNAMEFIELD,51,7,81,14,ES_AUTOHSCROLL
+    RTEXT           "username <loc>",IDC_CONFIGUSERNAMELABEL,7,10,39,8
+    EDITTEXT        IDC_PASSWORDFIELD,51,23,81,14,ES_AUTOHSCROLL
+    RTEXT           "Pass <local>",IDC_CONFIGPASSWORDLABEL,7,26,39,8
+    CONTROL         "Interval <local>",IDC_LOGINATINTERVAL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,16,74,64,10
+    EDITTEXT        IDC_LOGININTERVALFIELD,81,72,40,14,ES_AUTOHSCROLL
+    CONTROL         "hide <local>",IDC_HIDEPASSWORD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,138,26,67,10
+    LTEXT           "minut <loc>",IDC_LOGINATINTERVALUNIT,127,75,42,8
+    CONTROL         "start hidden<loc>",IDC_STARTHIDDEN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,166,58,70,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_CONFIGURATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 257
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 96
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_POPUP_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "Logga in",                    IDC_LOGINBUTTON
+        MENUITEM "Logga ut",                    IDC_LOGOUTBUTTON
+        MENUITEM "Avsluta",                     IDOK
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT, NOINVERT
+END
+
+#endif    // Swedish resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "res\iclogin.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
