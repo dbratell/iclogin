@@ -307,10 +307,10 @@ bool CComHemConnection::PostLogin(CInternetSession &internet_session, CString ti
 	bool good_request = true;
 	try {
 		good_request = (http_file->SendRequest(strHeaders, strHeaders.GetLength(), (LPVOID)(LPCTSTR)postdata, postdata.GetLength()) == TRUE);
-		char buffer[80];
+		char buffer[4000];
 		while(http_file->Read(buffer, sizeof(buffer)))
 		{
-			TRACE(buffer);
+//			TRACE(buffer);
 	//		TRACE(data);
 	//		TRACE("\n");
 		}

@@ -58,7 +58,6 @@ BOOL CIcloginApp::InitInstance()
 #else
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
-
 	CIcloginDlg dlg;
 	m_pMainWnd = &dlg;
 

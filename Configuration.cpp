@@ -110,7 +110,7 @@ void CConfiguration::SetStartHidden(bool do_it)
 
 const bool CConfiguration::GetIsConfigured()
 {
-	return (GetIntData(ISCONFIGUREDKEY, 1) != 0);
+	return (GetIntData(ISCONFIGUREDKEY, 0) != 0);
 }
 
 

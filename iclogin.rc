@@ -2,6 +2,11 @@
 //
 #include "resource.h"
 
+// Generated Help ID header file
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.hm"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -26,22 +31,28 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Dialog
 //
 
-IDD_ICLOGIN_DIALOG DIALOGEX 0, 0, 240, 82
+IDD_ICLOGIN_DIALOG DIALOGEX 0, 0, 199, 82
 STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | 
     WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "iclogin <loc>"
+MENU IDR_POPUP_MENU
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,183,7,50,14
-    PUSHBUTTON      "Login <loc>",IDC_LOGINBUTTON,7,7,50,14
+    DEFPUSHBUTTON   "OK",IDOK,133,3,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Login <loc>",IDC_LOGINBUTTON,7,3,50,14,0,0,
+                    HIDC_LOGINBUTTON
     PUSHBUTTON      "Logout <loc>",IDC_LOGOUTBUTTON,7,23,50,14
-    LTEXT           "*messagetext*",IDC_MESSAGETEXT,63,26,160,8
-    LTEXT           "*messagetext*",IDC_MESSAGETEXT2,63,39,163,8
-    PUSHBUTTON      "Config <l>",IDC_CONFIGUREBUTTON,71,7,50,14
+    CONTROL         "*messagetext*",IDC_MESSAGETEXT,"Static",
+                    SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,63,22,129,8
+    CONTROL         "*messagetext*",IDC_MESSAGETEXT2,"Static",
+                    SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,63,33,129,8
+    PUSHBUTTON      "Config <l>",IDC_CONFIGUREBUTTON,71,3,50,14
     ICON            IDI_QUESTIONICON,IDC_STATUSICON,20,39,21,20
-    LTEXT           "logged_in_time <loc>",IDC_LOGGEDINTIME,7,64,107,11
-    LTEXT           "logged_out_time <loc>",IDC_LOGGEDOUTTIME,118,64,115,11
+    CONTROL         "logged_in_time <loc>",IDC_LOGGEDINTIME,"Static",
+                    SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,63,46,107,11
+    CONTROL         "logged_out_time <loc>",IDC_LOGGEDOUTTIME,"Static",
+                    SS_LEFTNOWORDWRAP | SS_NOPREFIX | WS_GROUP,63,58,115,11
 END
 
 
@@ -52,8 +63,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,3,0,0
- PRODUCTVERSION 0,3,0,0
+ FILEVERSION 0,3,1,0
+ PRODUCTVERSION 0,3,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -71,14 +82,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Daniel Bratell\0"
             VALUE "FileDescription", "IC Login\0"
-            VALUE "FileVersion", "0, 3, 0, 0\0"
+            VALUE "FileVersion", "0, 3, 1, 0\0"
             VALUE "InternalName", "iclogin\0"
             VALUE "LegalCopyright", "Copyright (C) 2000\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "iclogin.EXE\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "IC Login\0"
-            VALUE "ProductVersion", "beta0.3\0"
+            VALUE "ProductVersion", "beta0.3.1\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -102,9 +113,9 @@ BEGIN
     IDD_ICLOGIN_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 233
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 75
+        RIGHTMARGIN, 192
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 76
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -117,11 +128,18 @@ END
 
 IDR_POPUP_MENU MENU DISCARDABLE 
 BEGIN
-    POPUP "popup"
+    POPUP "&File"
     BEGIN
         MENUITEM "Login",                       IDC_LOGINBUTTON
         MENUITEM "Logout",                      IDC_LOGOUTBUTTON
-        MENUITEM "Quit",                        IDOK
+        MENUITEM SEPARATOR
+        MENUITEM "&Configure",                  IDC_CONFIGUREBUTTON
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       IDOK
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About",                      IDC_ABOUT
     END
 END
 
@@ -173,6 +191,9 @@ BEGIN
     IDS_WRONGINTERVALVALUE  "The interval must be a number between 1 and 10000."
     IDS_NOCOMMONMESSAGE     "Couldn't get common message. Quiting."
     IDS_STARTHIDDEN         "Start hidden"
+    IDS_LOGINBUTTONTOOLTIP  "Login to Com Hem Internet Cable"
+    IDS_LOGOUTBUTTONTOOLTIP "Logout from Com Hem Internet Cable"
+    IDS_CONFIGUREBUTTONTOOLTIP "Setup IC Login"
 END
 
 #endif    // English (U.S.) resources
@@ -249,8 +270,8 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Config <localize>"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,207,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,207,24,50,14
+    DEFPUSHBUTTON   "OK",IDOK,206,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,206,24,50,14
     CONTROL         "loginatstartup <local>",IDC_LOGINATSTARTUPCHECKBOX,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,58,83,10
     EDITTEXT        IDC_USERNAMEFIELD,51,7,81,14,ES_AUTOHSCROLL
@@ -264,7 +285,19 @@ BEGIN
                     WS_TABSTOP,138,26,67,10
     LTEXT           "minut <loc>",IDC_LOGINATINTERVALUNIT,127,75,42,8
     CONTROL         "start hidden<loc>",IDC_STARTHIDDEN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,166,58,70,10
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,166,58,70,10
+END
+
+IDD_ABOUTDIALOG DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About IC Login"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Close",IDOK,129,74,50,14
+    LTEXT           "IC Login",IDC_STATIC,45,18,27,8
+    LTEXT           "A program that sets up and keeps the connection on Com Hem's Internet Cable",
+                    IDC_STATIC,43,40,127,29
+    LTEXT           "version 0.3.1",IDC_STATIC,87,18,42,8
 END
 
 
@@ -279,9 +312,17 @@ BEGIN
     IDD_CONFIGURATION, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 257
+        RIGHTMARGIN, 256
         TOPMARGIN, 7
         BOTTOMMARGIN, 96
+    END
+
+    IDD_ABOUTDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -294,12 +335,13 @@ END
 
 IDR_POPUP_MENU MENU DISCARDABLE 
 BEGIN
-    POPUP "popup"
+    POPUP "Arkiv"
     BEGIN
         MENUITEM "Logga in",                    IDC_LOGINBUTTON
         MENUITEM "Logga ut",                    IDC_LOGOUTBUTTON
         MENUITEM "Avsluta",                     IDOK
     END
+    MENUITEM "Hjälp",                       65535, HELP
 END
 
 

@@ -75,7 +75,8 @@ protected:
 	afx_msg LRESULT OnTrayIcon(WPARAM wparam, LPARAM lparam);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg LRESULT OnCommonMessage(WPARAM wparam, LPARAM lparam);
-	afx_msg BOOL OnHelpInfo(HELPINFO* pHelpInfo);
+	afx_msg void OnAboutDialog();
+	afx_msg BOOL OnToolTipNotify(UINT id, NMHDR *pNMHDR, LRESULT *pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -83,14 +84,16 @@ private:
 	void DisplayMessage(UINT message_id);
 	void SetupLoginTimer();
 	void SetLoginStatus(int status);
-	BOOL Find_another_instance();
+	BOOL FindAnotherInstance();
 	void UpdateTimers();
+	void AddTrayIcon();
 
 
 // Attributes
 	UINT m_logintimer;
 	UINT m_updatetimer;
-	int m_currentstatus;
+	int m_currentstatus;  // -1 not logged in, 0 unknown, 1 logged in.
+	int m_expectedstatus;
 	bool m_failedlastlogin;
 
 	CTimeSpan m_loggedintimespan, m_loggedouttimespan;

@@ -40,8 +40,12 @@
 #define IDI_HAPPY                       133
 #define IDS_STARTHIDDEN                 133
 #define IDI_SAD                         134
+#define IDS_LOGINBUTTONTOOLTIP          134
 #define IDI_QUESTIONICON                135
+#define IDS_LOGOUTBUTTONTOOLTIP         135
 #define IDR_ACCELERATOR1                136
+#define IDS_CONFIGUREBUTTONTOOLTIP      136
+#define IDD_ABOUTDIALOG                 138
 #define IDC_LOGINBUTTON                 1000
 #define IDC_LOGOUTBUTTON                1001
 #define IDC_MESSAGETEXT                 1002
@@ -60,13 +64,14 @@
 #define IDC_LOGGEDINTIME                1015
 #define IDC_LOGGEDOUTTIME               1016
 #define IDC_STARTHIDDEN                 1017
+#define IDC_ABOUT                       32776
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        137
-#define _APS_NEXT_COMMAND_VALUE         32774
+#define _APS_NEXT_RESOURCE_VALUE        139
+#define _APS_NEXT_COMMAND_VALUE         32780
 #define _APS_NEXT_CONTROL_VALUE         1018
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

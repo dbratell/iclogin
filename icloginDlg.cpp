@@ -7,6 +7,7 @@
 #include "ComHemConnection.h"
 #include "Configuration.h"
 #include "ConfigurationDialog.h"
+#include "AboutDialog.h"
 #include "icmessages.h"
 
 #ifdef _DEBUG
@@ -27,7 +28,8 @@ UINT g_common_message = 0;
 CIcloginDlg::CIcloginDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CIcloginDlg::IDD, pParent),
 	m_logintimer(0), m_loggedintimespan(0), m_loggedouttimespan(0), 
-	m_failedlastlogin(false), m_startingup(true)
+	m_failedlastlogin(false), m_startingup(true), m_currentstatus(0),
+	m_expectedstatus(0)
 {
 	//{{AFX_DATA_INIT(CIcloginDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -83,7 +85,9 @@ BEGIN_MESSAGE_MAP(CIcloginDlg, CDialog)
 	ON_MESSAGE(IC_TRAYICON, OnTrayIcon)
 	ON_WM_SIZE()
 	ON_REGISTERED_MESSAGE(g_common_message, OnCommonMessage)
-	ON_WM_HELPINFO()
+	ON_COMMAND(IDC_ABOUT, OnAboutDialog)
+	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTW, 0, 0xFFFF, OnToolTipNotify)
+	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTA, 0, 0xFFFF, OnToolTipNotify)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -94,7 +98,7 @@ BOOL CIcloginDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	if(Find_another_instance())
+	if(FindAnotherInstance())
 	{
 		::PostQuitMessage(0);
 		return false;
@@ -107,16 +111,15 @@ BOOL CIcloginDlg::OnInitDialog()
 	
 	// TODO: Add extra initialization here
 
-	// Add tray icon
-	NOTIFYICONDATA nid;
-	nid.cbSize = sizeof(nid);
-	nid.hWnd = *this;
-	nid.uID = TRAYICONID;
-	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-	nid.uCallbackMessage = IC_TRAYICON;
-	nid.hIcon = m_hIcon = AfxGetApp()->LoadIcon(IDI_TRAYICON); // XXX New icon
-	strcpy(nid.szTip, _T("IC Login"));
-	Shell_NotifyIcon(NIM_ADD, &nid);
+	// Configure it if this is the first time.
+	if(!CConfiguration::GetIsConfigured())
+	{
+		CConfigurationDialog config_dialog;
+		config_dialog.DoModal();
+		CConfiguration::SetIsConfigured(true);
+	}
+
+	AddTrayIcon();
 
 	CString buttontext;
 	buttontext.LoadString(IDS_LOGINBUTTONTEXT);
@@ -133,8 +136,9 @@ BOOL CIcloginDlg::OnInitDialog()
 	CString window_title;
 	window_title.LoadString(IDS_DIALOGTITLE);
 	SetWindowText(window_title);
-
-	m_currentstatus = 0;
+	
+	EnableToolTips(true);
+	
 	SetLoginStatus(0);
 
 	if(CConfiguration::GetLoginAtStartup() && !CConfiguration::GetUsername().IsEmpty())
@@ -144,6 +148,7 @@ BOOL CIcloginDlg::OnInitDialog()
 	m_updatetimer = SetTimer(UPDATETIMER, 
 			CConfiguration::GetUpdateTimersInterval()*1000, 
 			NULL);
+
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -597,7 +602,7 @@ LRESULT CIcloginDlg::OnCommonMessage(WPARAM wparam, LPARAM)
  * message with a HWND as LPARAM and 0 as WPARAM and brings that window 
  * to the foreground.
  */
-BOOL CIcloginDlg::Find_another_instance()
+BOOL CIcloginDlg::FindAnotherInstance()
 {
 	HWND hwnd = GetSafeHwnd();
 	if(!g_common_message)
@@ -665,12 +670,62 @@ BOOL CIcloginDlg::Find_another_instance()
 	return false;
 }
 
-
-BOOL CIcloginDlg::OnHelpInfo(HELPINFO* pHelpInfo) 
+void CIcloginDlg::OnAboutDialog() 
 {
-	// TODO: Add your message handler code here and/or call default
+	CAboutDialog dialog;
 
-	// No help!
-//	return CDialog::OnHelpInfo(pHelpInfo);
-	return false; // Or should it be true?
+	dialog.DoModal();
+}
+
+void CIcloginDlg::AddTrayIcon()
+{
+		// Add tray icon
+	NOTIFYICONDATA nid;
+	nid.cbSize = sizeof(nid);
+	nid.hWnd = *this;
+	nid.uID = TRAYICONID;
+	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+	nid.uCallbackMessage = IC_TRAYICON;
+	nid.hIcon = m_hIcon = AfxGetApp()->LoadIcon(IDI_TRAYICON); // XXX New icon
+	strcpy(nid.szTip, _T("IC Login"));
+	Shell_NotifyIcon(NIM_ADD, &nid);
+}
+
+//Notification handler
+BOOL CIcloginDlg::OnToolTipNotify(UINT id, NMHDR *pNMHDR, LRESULT *pResult)
+{
+   // need to handle both ANSI and UNICODE versions of the message
+   TOOLTIPTEXTA* pTTTA = (TOOLTIPTEXTA*)pNMHDR;
+   TOOLTIPTEXTW* pTTTW = (TOOLTIPTEXTW*)pNMHDR;
+   CString strTipText;
+   UINT nID = pNMHDR->idFrom;
+   if (pNMHDR->code == TTN_NEEDTEXTA && (pTTTA->uFlags & TTF_IDISHWND) ||
+      pNMHDR->code == TTN_NEEDTEXTW && (pTTTW->uFlags & TTF_IDISHWND))
+   {
+      // idFrom is actually the HWND of the tool
+      nID = ::GetDlgCtrlID((HWND)nID);
+   }
+
+   switch(nID)
+   {
+   case IDC_LOGINBUTTON:
+	   strTipText.LoadString(IDS_LOGINBUTTONTOOLTIP);
+	   break;
+   case IDC_LOGOUTBUTTON:
+	   strTipText.LoadString(IDS_LOGOUTBUTTONTOOLTIP);
+	   break;
+   case IDC_CONFIGUREBUTTON:
+	   strTipText.LoadString(IDS_CONFIGUREBUTTONTOOLTIP);
+	   break;
+   default: // No tooltip
+	   ;
+   }
+
+   if (pNMHDR->code == TTN_NEEDTEXTA)
+      lstrcpyn(pTTTA->szText, strTipText, sizeof(pTTTA->szText));
+   else
+      _mbstowcsz(pTTTW->szText, strTipText, sizeof(pTTTW->szText));
+   *pResult = 0;
+
+   return TRUE;    // message was handled
 }
