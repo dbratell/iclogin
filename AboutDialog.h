@@ -51,6 +51,7 @@ private:
 	// Implementation
 private:
 	void SetScrollText();
+	int CharWidth(_TCHAR letter);
 
 };
 

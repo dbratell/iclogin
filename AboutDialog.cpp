@@ -117,7 +117,6 @@ void CAboutDialog::OnTimer(UINT nIDEvent)
 	switch(nIDEvent)
 	{
 	case SCROLLTIMER:
-		++m_scrolloffset;
 		SetScrollText();
 		break;
 	default:
@@ -135,11 +134,6 @@ void CAboutDialog::SetScrollText()
 		return;
 	}
 
-	if(m_scrolloffset > length)
-	{
-		m_scrolloffset = m_scrolloffset % length;
-	}
-
 	CString toshow = m_credits.Right(length-m_scrolloffset);
 	while(toshow.GetLength() < SCROLLWIDTH)
 	{
@@ -151,4 +145,40 @@ void CAboutDialog::SetScrollText()
 	}
 
 	m_scrolltext.SetWindowText(toshow);
+
+	_TCHAR letter = m_credits.GetAt(m_scrolloffset);
+	++m_scrolloffset;
+	if(CharWidth(letter < 6))
+	{
+		++m_scrolloffset;
+	}
+
+	if(m_scrolloffset >= length)
+	{
+		m_scrolloffset = m_scrolloffset % length;
+	}
+
+	CString mess; 
+	mess.Format("%c is %d wide.\n", letter, CharWidth(letter));
+	TRACE(mess);
+}
+
+inline int CAboutDialog::CharWidth(_TCHAR letter)
+{
+	int rv=8;
+	CDC *dc = GetDC();
+	if(!dc)
+	{
+		ASSERT(false);
+		return 8;
+	}
+	
+	int width;
+	if(dc->GetCharWidth(letter, letter, &width))
+	{
+		rv = width;
+	}
+
+	ReleaseDC(dc);
+	return rv;
 }
