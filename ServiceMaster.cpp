@@ -126,23 +126,25 @@ bool CServiceMaster::SetServiceDescription(SC_HANDLE servicehandle, LPTSTR descr
 		return false;
 	}
 
+	bool returnvalue = false;
+
 	ChangeServiceConfig2Func func;
 #ifdef _UNICODE
 	func = (ChangeServiceConfig2Func)GetProcAddress(advapi32dll, "ChangeServiceConfig2W");
 #else
 	func = (ChangeServiceConfig2Func)GetProcAddress(advapi32dll, "ChangeServiceConfig2A");
 #endif
-	if(!func)
+	if(func)
 	{
-		return false;
+		SERVICE_DESCRIPTION sd;
+		sd.lpDescription = description;
+		returnvalue = func(servicehandle, 
+			SERVICE_CONFIG_DESCRIPTION, &sd) != FALSE;
 	}
-	SERVICE_DESCRIPTION sd;
-	sd.lpDescription = description;
 	
-	return func(servicehandle, SERVICE_CONFIG_DESCRIPTION, &sd) != FALSE;
-
 	FreeLibrary(advapi32dll);
 
+	return returnvalue;
 }
 
 

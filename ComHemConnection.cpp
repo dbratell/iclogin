@@ -134,6 +134,18 @@ bool CComHemConnection::Is_loggined() const
 			{
 				g_log.Log("Finding keywords.", CLog::LOG_DUMP);
 				return_value = true;
+
+				// Extended logintest?
+				if(CConfiguration::GetExtendedLoggedInTest())
+				{
+					// Do it every forth time we do a test.
+					static counter = 0;
+					counter = (counter + 1) % 4;
+					if(!counter)
+					{
+						return_value = ExtendedLoggedInTest(internet_session);
+					}
+				}
 			}
 			else
 			{
@@ -156,6 +168,13 @@ bool CComHemConnection::Is_loggined() const
 			{
 				g_log.Log("No 'pwdenter'. Logged in.", CLog::LOG_DUMP);
 				return_value = true;
+				// Extended logintest?
+				static counter = 0;
+				counter = (counter + 1) % 3;
+				if(!counter)
+				{
+					return_value = ExtendedLoggedInTest(internet_session);
+				}
 			}
 		}
 		else if(m_login_method == LOGIN_METHOD_UNKNOWN)
@@ -166,6 +185,61 @@ bool CComHemConnection::Is_loggined() const
 
 	return return_value;
 }
+
+bool CComHemConnection::ExtendedLoggedInTest(CInternetSession &internet_session)
+{
+	static lasturl = -1;
+	static char* urls[] = 
+	{
+		"www.svt.se",   // I
+		"www.netscape.com", // II
+		"www.telia.se",  // III
+		"www.yahoo.se",  // IV
+		"www.tv4.se",  // V
+		"www.dn.se",  // VI
+		"www.expressen.se",  // VII
+		"www.altavista.com",  // VIII
+		"www.cnn.com", // IX 
+		"www.aftonbladet.se", // X
+		"www.passagen.se", // XI
+		"www.nb.se",  // XII
+		"www.foreningssparbanken.se", // XIII
+		"www.ppm.nu",  // XIV
+		"www.altavista.com", // XV
+		"www.lycos.com", // XVI
+		"www.google.com", // XVII
+		"www.disney.com", // XVIII
+	};
+	const static no_urls = 18;
+
+	if(lasturl == -1)
+	{
+		CTime now = CTime::GetCurrentTime();
+		srand(now.GetSecond()+now.GetMinute()*60+now.GetHour()*3600);
+		lasturl = rand() % no_urls;
+	}
+
+	int tries = 0;
+
+	while(tries<5)
+	{
+		try 
+		{
+			lasturl = (lasturl + 1) % no_urls;
+			VisitUrl(internet_session, urls[lasturl], "/", true);
+			return true;
+		}
+		catch(CInternetException *cie)
+		{
+			cie->Delete();
+		}
+		tries++;
+	}
+	
+	// Did all tries, and none succeeded. We are not logged in after all.
+	return false;
+}
+
 
 void CComHemConnection::DetectLoginMethod(
 			CInternetSession &internet_session) const
@@ -523,10 +597,11 @@ bool CComHemConnection::Logout() const
  * Throws CInternetException
  */
 void CComHemConnection::VisitUrl(CInternetSession& internet_session, 
-						   const CString& host, const CString & file)
+						   const CString& host, const CString & file,
+						   bool just_head /* = false */)
 {
 	CString dummy_data;
-	GetUrl(internet_session, host, file, dummy_data);
+	GetUrl(internet_session, host, file, dummy_data, just_head);
 }
 
 
@@ -535,7 +610,7 @@ void CComHemConnection::VisitUrl(CInternetSession& internet_session,
  */
 void CComHemConnection::GetUrl(CInternetSession& internet_session, 
 						   const CString& host, const CString & file, 
-						   CString& data)
+						   CString& data, bool just_head /* = false */)
 {
 	auto_ptr<CHttpConnection> http_connection;
 	auto_ptr<CHttpFile> http_file;
@@ -551,8 +626,11 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 	} 
 
 	try {
+		int http_verb = 
+			just_head?CHttpConnection::HTTP_VERB_HEAD:CHttpConnection::HTTP_VERB_GET;
 		http_file = auto_ptr<CHttpFile>(http_connection->OpenRequest(
-			CHttpConnection::HTTP_VERB_GET, file, NULL, 1, NULL, NULL, 
+			http_verb, 
+			file, NULL, 1, NULL, NULL, 
 			INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE));
 	} catch (CInternetException *cie) {
 		LogInternetError(internet_session, "OpenRequest", cie);
@@ -574,8 +652,32 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 	if(statuscode<200 || 299 < statuscode)
 	{
 		CString err;
-		err.Format("Got status code %d from server. That's not good.", 
+		err.Format("Got status code %d from server.", 
 			statuscode);
+		if(statuscode < 200)
+		{
+			err += " That's an error.";
+		}
+		else if(statuscode<400)
+		{
+			err += " That's status IC Login can't handle.";
+		}
+		else if(statuscode==404)
+		{
+			err += " That means that the page didn't exist.";
+		}
+		else if(statuscode<500)
+		{
+			err += " That's a usage error.";
+		}
+		else if(statuscode<600)
+		{
+			err += " That's a server error.";
+		}
+		else
+		{
+			err += " That's an unknown type of error.";
+		}
 		g_log.Log(err, CLog::LOG_INFO);
 		http_file->Abort();
 		http_connection->Close();

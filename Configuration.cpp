@@ -28,6 +28,9 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+#define CONFIGURATIONVERSION 1
+
+const _TCHAR* const CONFIGURATIONVERSIONKEY = _T("ConfigurationVersion");
 const _TCHAR* const LOGINHOSTKEY = _T("LoginHost");
 const _TCHAR* const USERNAMEKEY = _T("Username");
 const _TCHAR* const PASSWORDKEY = _T("Password");
@@ -46,6 +49,8 @@ const _TCHAR* const LOGOUTTIMEBEFORERESTARTKEY = _T("LogoutTimeBeforeRestartDHCP
 const _TCHAR* const LOGTOFILEKEY = _T("LogToFile");
 const _TCHAR* const LOGFILEKEY = _T("LogFile");
 const _TCHAR* const LOGLEVELKEY = _T("LogLevel");
+const _TCHAR* const NEVERUSEPROXYKEY = _T("NeverUseProxy");
+const _TCHAR* const EXTENDEDLOGGEDINKEY = _T("ExtendedLoggedInTest");
 #ifdef ICLOGIN_SERVICE
 const _TCHAR* const SERVICENAMEKEY = _T("ServiceName");
 const _TCHAR* const SERVICEDISPLAYNAMEKEY = _T("ServiceDisplayName");
@@ -105,6 +110,17 @@ void  CConfiguration::CleanRegistry()
 			}
 		}
 	}
+}
+
+
+const int CConfiguration::GetRegistryConfigurationVersion()
+{
+	return GetIntData(CONFIGURATIONVERSIONKEY, 0);
+}
+
+void CConfiguration::SetRegistryConfigurationVersionToCurrent()
+{
+	SetIntData(CONFIGURATIONVERSIONKEY, CONFIGURATIONVERSION);
 }
 
 
@@ -217,15 +233,93 @@ void CConfiguration::SetUsername(const CString &name)
 }
 
 
+/**
+ * A little obscured. Just to make it unreadable by the casual eye.
+ * This is by no means secure. I just liked playing with numbers
+ * which is the reason it looks so complicated. (A XOR or 
+ * Base64-encode would have done) 
+ */
 const CString CConfiguration::GetPassword()
 {
-	return GetStringData(PASSWORDKEY, _T(""));
+	CString password = GetStringData(PASSWORDKEY, _T(""));
+	if(GetRegistryConfigurationVersion()<1)
+	{
+		return password;
+	}
+
+	// Must be a multiple of three
+	if(password.GetLength() % 3)
+	{
+		return "";
+	}
+
+	if(password.GetLength() > 90)
+	{
+		// Could cause trouble
+		return "";
+	}
+
+	CString decoded_password;
+	for(int i = 0; i < password.GetLength()/3; i++)
+	{
+		// First three bits
+		unsigned char first = (unsigned char)(password[3*i]-i);
+		if(first<'a' || first>('a'+7))
+		{
+			return "";
+		}
+
+		// Second two bits
+		unsigned char second = (unsigned char)(password[3*i+1]-i);
+		if(second<'g' || second > ('g'+3))
+		{
+			return "";
+		}
+
+		// The last three bits
+		unsigned char third = (unsigned char)(password[3*i+2]-i);
+		if(third<'b' || third > ('b'+7))
+		{
+			return "";
+		}
+
+		unsigned char decoded_char = 
+			(unsigned char)((first-'a')<<5 | 
+			((second-'g')<<3) | 
+			(third-'b'));
+			
+		decoded_password += decoded_char;
+	}
+
+	return decoded_password;
 }
 
 
+/**
+ * A little obscured. Just to make it unreadable by the casual eye.
+ * This is by no means secure.
+ */
 void CConfiguration::SetPassword(const CString &password)
 {
-	SetStringData(PASSWORDKEY, password);
+
+    // Easy way to "see" password with this test. If the password
+	// was encrypted this would be a security hole.
+	if(GetRegistryConfigurationVersion()<1)
+	{
+		SetStringData(PASSWORDKEY, password);
+	}
+	
+	CString obscured_password;
+
+	for(int i = 0; i < password.GetLength(); i++)
+	{
+		char letter = password[i];
+		obscured_password += (unsigned char)(((letter & 0xe0) >> 5) + 'a'+i);
+		obscured_password += (unsigned char)(((letter & 0x18) >> 3) + 'g'+i);
+		obscured_password += (unsigned char)((letter & 0x07) + 'b'+i);
+	}
+
+	SetStringData(PASSWORDKEY, obscured_password);
 }
 
 
@@ -236,10 +330,23 @@ const bool CConfiguration::GetHidePassword()
 }
 
 
+void CConfiguration::SetNeverUseProxy(const bool do_it)
+{
+	SetIntData(NEVERUSEPROXYKEY, do_it?1:0);
+}
+
+
+const bool CConfiguration::GetNeverUseProxy()
+{
+	return (GetIntData(NEVERUSEPROXYKEY, 0) != 0);
+}
+
+
 void CConfiguration::SetHidePassword(const bool do_it)
 {
 	SetIntData(HIDEPASSWORDKEY, do_it?1:0);
 }
+
 
 const bool CConfiguration::GetLogToFile()
 {
@@ -339,6 +446,16 @@ void CConfiguration::SetServiceLongName(const CString &name)
 	SetStringData(SERVICEDISPLAYNAMEKEY, name);
 }
 
+bool CConfiguration::GetExtendedLoggedInTest()
+{
+	return (GetIntData(EXTENDEDLOGGEDINKEY, 0) != 0);
+}
+
+void CConfiguration::SetExtendedLoggedInTest(bool do_it)
+{
+	SetIntData(EXTENDEDLOGGEDINKEY, do_it?1:0);
+}
+
 
 const bool CConfiguration::GetVisibleAsService()
 {
@@ -397,8 +514,9 @@ const bool CConfiguration::GetAutoStart()
 
 void CConfiguration::SetAutoStart(const bool do_it)
 {
+	HKEY start_key = GetRegKey(LocalMachine);
 	CRegKey regkey1;
-	if(regkey1.Create(HKEY_CURRENT_USER, _T("Software")) == ERROR_SUCCESS)
+	if(regkey1.Create(start_key, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
 		if(regkey2.Create(regkey1, _T("Microsoft")) == ERROR_SUCCESS)
@@ -437,12 +555,41 @@ void CConfiguration::SetAutoStart(const bool do_it)
 }
 
 
+/**
+ * Try to write, and if successable, retur true.
+ */
+bool CConfiguration::IsWritable()
+{
+	CRegKey regkey1;
+	if(regkey1.Create(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
+	{
+		CRegKey regkey2;
+		if(regkey2.Create(regkey1, COMPANYKEY) == ERROR_SUCCESS)
+		{
+			CRegKey regkey3;
+			if(regkey3.Create(regkey2, APPKEY) == ERROR_SUCCESS)
+			{
+				static const _TCHAR* key = _T("DummyToSeeIfWritable");
+				if(regkey3.SetValue(4711, key) == ERROR_SUCCESS)
+				{
+					regkey3.DeleteValue(key);
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
 
-int CConfiguration::GetIntData(const CString& key, int default_data)
+
+int CConfiguration::GetIntData(const CString& key, 
+							   int default_data, 
+		RegistryPart registry_part /* =LocalMachine */)
 {
 	int rv = default_data; // Default;
+	HKEY start_key = GetRegKey(registry_part);
 	CRegKey regkey1;
-	if(regkey1.Open(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
+	if(regkey1.Open(start_key, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
 		if(regkey2.Open(regkey1, COMPANYKEY) == ERROR_SUCCESS)
@@ -453,7 +600,7 @@ int CConfiguration::GetIntData(const CString& key, int default_data)
 				DWORD data_in_reg;
 				if(regkey3.QueryValue(data_in_reg, key) == ERROR_SUCCESS)
 				{
-					rv = data_in_reg;
+					return data_in_reg;
 				}
 			}
 		}
@@ -463,10 +610,13 @@ int CConfiguration::GetIntData(const CString& key, int default_data)
 
 
 
-void CConfiguration::SetIntData(const CString& key, int value)
+void CConfiguration::SetIntData(const CString& key, 
+								int value, 
+		RegistryPart registry_part /* =LocalMachine */)
 {
+	HKEY start_key = GetRegKey(registry_part);
 	CRegKey regkey1;
-	if(regkey1.Create(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
+	if(regkey1.Create(start_key, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
 		if(regkey2.Create(regkey1, COMPANYKEY) == ERROR_SUCCESS)
@@ -485,11 +635,14 @@ void CConfiguration::SetIntData(const CString& key, int value)
 
 
 
-CString CConfiguration::GetStringData(const CString& key, const CString& default_data)
+CString CConfiguration::GetStringData(const CString& key, 
+									  const CString& default_data, 
+		RegistryPart registry_part /*=LocalMachine */)
 {
 	CString rv = default_data; // Default;
+	HKEY start_key = GetRegKey(registry_part);
 	CRegKey regkey1;
-	if(regkey1.Open(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
+	if(regkey1.Open(start_key, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
 		if(regkey2.Open(regkey1, COMPANYKEY) == ERROR_SUCCESS)
@@ -512,10 +665,13 @@ CString CConfiguration::GetStringData(const CString& key, const CString& default
 	return rv; 
 }
 
-void CConfiguration::SetStringData(const CString& key, const CString& value)
+void CConfiguration::SetStringData(const CString& key, 
+								   const CString& value, 
+		RegistryPart registry_part /*=LocalMachine*/)
 {
+	HKEY start_key = GetRegKey(registry_part);
 	CRegKey regkey1;
-	if(regkey1.Create(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
+	if(regkey1.Create(start_key, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
 		if(regkey2.Create(regkey1, COMPANYKEY) == ERROR_SUCCESS)
@@ -529,5 +685,18 @@ void CConfiguration::SetStringData(const CString& key, const CString& value)
 				}
 			}
 		}
+	}
+}
+
+inline HKEY CConfiguration::GetRegKey(RegistryPart registry_part)
+{
+	switch(registry_part)
+	{
+	case LocalMachine:
+		return HKEY_LOCAL_MACHINE;
+		break;
+	default:
+		ASSERT(registry_part == CurrentUser);
+		return HKEY_CURRENT_USER;
 	}
 }

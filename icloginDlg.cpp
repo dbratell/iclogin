@@ -291,12 +291,10 @@ LRESULT CIcloginDlg::OnLoginFailed(WPARAM, LPARAM)
 		m_restartdhcptimer = SetTimer(RESTARTDHCPTIMER, 
 			CConfiguration::GetLogoutTimeBeforeRestartDHCP()*1000, 
 			NULL);
-#ifdef _DEBUG
 		if(m_restartdhcptimer == 0)
 		{
 			TRACE("Out of timers!\n");
 		}
-#endif
 	}
 
 	return 0;
@@ -350,6 +348,9 @@ LRESULT CIcloginDlg::OnRestartDHCPFailed(WPARAM, LPARAM)
 	g_log.Log("Restart of DHCP failed.");
 	DisplayMessage(IDS_RESTARTDHCPFAILED);
 	m_messagetext2.SetWindowText(_T(""));
+
+	// A new timer will be set the next time a login fails, 
+	// which will be soon if there are network trouble.
 	return 0;
 }
 
@@ -785,7 +786,7 @@ BOOL CIcloginDlg::OnToolTipNotify(UINT, NMHDR *pNMHDR, LRESULT *pResult)
 	   if(m_everlogin)
 	   {
 		   strTipText += _T(" (");
-		   strTipText += m_lastlogintime.Format(IDS_LASTLOGOUTTIME);
+		   strTipText += m_lastlogintime.Format(IDS_LASTLOGINTIME);
 		   strTipText += _T(")");
 	   }
 	   break;

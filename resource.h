@@ -124,6 +124,7 @@
 #define IDS_RESTARTDHCPSTARTED          1036
 #define IDS_RESTARTDHCPSUCCEEDED        1037
 #define IDS_RESTARTDHCPFAILED           1038
+#define IDS_CONFIGURATION_NOT_WRITABLE  1039
 #define IDC_ABOUT                       32776
 
 // Next default values for new objects

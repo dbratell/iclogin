@@ -45,12 +45,14 @@ private:
 	static int ExtractTimestamp(const CString& webpage, CString& timestamp);
 	static void GetUrl(CInternetSession& internet_session, 
 						   const CString& host, const CString & file, 
-						   CString& data);
+						   CString& data, bool just_head = false);
 	static void VisitUrl(CInternetSession& internet_session, 
-						   const CString& host, const CString & file);
+						   const CString& host, const CString & file,
+						   bool just_head = false);
 	static bool PostLogin(CInternetSession &is, 
 		const CString &timestamp,
 		const CString &login_page);
+	static bool	ExtendedLoggedInTest(CInternetSession &internet_session);
 	static bool	LoginOldWay(CInternetSession &internet_session);
 	static bool	LoginNewWay(CInternetSession &internet_session);
 	static void LogInternetError(const CInternetSession &internet_session,

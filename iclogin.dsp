@@ -349,9 +349,5 @@ SOURCE=.\res\trayminu.ico
 SOURCE=.\res\trayplus.ico
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\ReadMe.txt
-# End Source File
 # End Target
 # End Project

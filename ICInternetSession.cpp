@@ -21,6 +21,7 @@
 #include "iclogin.h"
 #include "icmessages.h"
 #include "ICInternetSession.h"
+#include "Configuration.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -28,14 +29,18 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-const _TCHAR* const USERAGENT = "Mozilla/4.75+[en]+(Windows+NT+5.0;+U)";
+const _TCHAR* const USERAGENT = "Mozilla/4.75 [en] (Windows NT 5.0; U)";
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
 CICInternetSession::CICInternetSession(CWnd *parent)
-: CInternetSession(USERAGENT), m_wnd(parent)
+: CInternetSession(USERAGENT, 1, 
+				   CConfiguration::GetNeverUseProxy()?
+						INTERNET_OPEN_TYPE_DIRECT :
+						INTERNET_OPEN_TYPE_PRECONFIG),
+				m_wnd(parent)
 {
 	EnableStatusCallback();
 }

@@ -44,6 +44,7 @@ void CConfigurationDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CConfigurationDialog)
+	DDX_Control(pDX, IDOK, m_okbutton);
 	DDX_Control(pDX, IDC_RESTARTDHCP, m_restartdhcp);
 	DDX_Control(pDX, IDC_STARTUPMETHOD, m_startupmethod);
 	DDX_Control(pDX, IDC_SERVICEPOPUPERRORS, m_servicepopuperror);
@@ -83,8 +84,6 @@ BOOL CConfigurationDialog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	
-	// TODO: Add extra initialization here
-
 	CString data;
 	data.LoadString(IDS_CONFIGDIALOGTITLE);
 	SetWindowText(data);
@@ -179,7 +178,9 @@ BOOL CConfigurationDialog::OnInitDialog()
 	m_restartdhcp.SetCheck(CConfiguration::GetRestartDHCPWhenNeeded());
 
 	EnableToolTips(true);
-	
+
+	DisableIfWriteProtected();
+
 	if(!CConfiguration::GetIsConfigured())
 	{
 	//	ModifyStyleEx(0, WS_EX_TOPMOST);
@@ -191,6 +192,39 @@ BOOL CConfigurationDialog::OnInitDialog()
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
+
+void CConfigurationDialog::DisableIfWriteProtected()
+{
+	if(CConfiguration::IsWritable())
+	{
+		return;
+	}
+
+	AfxMessageBox(IDS_CONFIGURATION_NOT_WRITABLE,
+		MB_ICONEXCLAMATION | MB_OK);
+
+	m_okbutton.EnableWindow(false);
+	m_cleanregistrybutton.EnableWindow(false);
+	m_usernamefield.EnableWindow(false);
+	m_passwordfield.EnableWindow(false);
+	m_hidepassword.EnableWindow(false);
+	m_loginatstartup.EnableWindow(false);
+	m_loginatinterval.EnableWindow(false);
+	m_loginatintervalfield.EnableWindow(false);
+	m_starthidden.EnableWindow(false);
+	m_logtofile.EnableWindow(false);
+	m_startupmethod.EnableWindow(false);
+	CWnd *radiobutton;
+	radiobutton = GetDlgItem(IDC_NOAUTOSTART);
+	radiobutton->EnableWindow(false);
+	radiobutton = GetDlgItem(IDC_STARTONLOGIN);
+	radiobutton->EnableWindow(false);
+	radiobutton = GetDlgItem(IDC_RUNASSERVICE);
+	radiobutton->EnableWindow(false);
+	m_servicepopuperror.EnableWindow(false);
+	m_restartdhcp.EnableWindow(false);
+}
+
 
 void CConfigurationDialog::OnHidepassword() 
 {

@@ -29,7 +29,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const _TCHAR* const IC_VERSIONSTRING = _T("version 0.6");
+const _TCHAR* const IC_VERSIONSTRING = _T("version 1.0pre");
 const _TCHAR* const IC_APPURL = _T("http://www.lysator.liu.se/~bratell/iclogin/");
 
 
@@ -81,6 +81,17 @@ BOOL CIcloginApp::InitInstance()
 
 	g_log.Log("IC Login started");
 	
+
+	// Update registry
+	// There is only two versions right now. 0 and 1.
+	if(CConfiguration::GetRegistryConfigurationVersion() < 1)
+	{
+		// Update password
+		CString password = CConfiguration::GetPassword();
+		CConfiguration::SetRegistryConfigurationVersionToCurrent();
+		CConfiguration::SetPassword(password);
+	}
+
 
 #ifdef ICLOGIN_SERVICE
 	if(IsWindowsNT())

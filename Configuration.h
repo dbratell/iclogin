@@ -26,7 +26,18 @@
 
 class CConfiguration  
 {
+private:
+	enum RegistryPart
+	{
+		LocalMachine,
+		CurrentUser
+	};
 public:
+	static bool IsWritable();
+	static const int GetRegistryConfigurationVersion();
+	static void SetRegistryConfigurationVersionToCurrent();
+	static bool GetExtendedLoggedInTest();
+	static void SetExtendedLoggedInTest(bool do_it);
 	static const int GetLoginInterval();
 	static void SetLoginInterval(int interval);
 	static const bool GetLoginAtInterval();
@@ -47,6 +58,8 @@ public:
 	static void SetUpdateTimersInterval(int interval);
 	static const bool GetStartHidden();
 	static void SetStartHidden(bool do_it);
+	static const bool GetNeverUseProxy();
+	static void SetNeverUseProxy(const bool do_it);
 	static const bool GetIsConfigured();
 	static void SetIsConfigured(bool do_it);
 	static const bool GetAutoStart();
@@ -82,10 +95,18 @@ public:
 private:
 	CConfiguration();
 	virtual ~CConfiguration();
-	static int GetIntData(const CString& key, int default_data);
-	static void SetIntData(const CString& key, int value);
-	static CString GetStringData(const CString& key, const CString &default_data);
-	static void SetStringData(const CString& key, const CString& value);
+	static int GetIntData(const CString& key, 
+		int default_data, 
+		RegistryPart registry_part=LocalMachine);
+	static void SetIntData(const CString& key, int value, 
+		RegistryPart registry_part=LocalMachine);
+	static CString GetStringData(const CString& key, 
+		const CString &default_data, 
+		RegistryPart registry_part=LocalMachine);
+	static void SetStringData(const CString& key, 
+		const CString& value, 
+		RegistryPart registry_part=LocalMachine);
+	static HKEY GetRegKey(RegistryPart start_key);
 };
 
 #endif // !defined(AFX_CONFIGURATION_H__073303F5_1322_4D8A_AF60_B1FC723CB584__INCLUDED_)

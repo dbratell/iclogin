@@ -34,6 +34,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CConfigurationDialog)
 	enum { IDD = IDD_CONFIGURATION };
+	CButton	m_okbutton;
 	CButton	m_restartdhcp;
 	CButton	m_startupmethod;
 	CButton	m_servicepopuperror;
@@ -62,6 +63,8 @@ public:
 
 // Implementation
 protected:
+
+	void DisableIfWriteProtected();
 
 	// Generated message map functions
 	//{{AFX_MSG(CConfigurationDialog)
