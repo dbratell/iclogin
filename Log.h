@@ -41,6 +41,7 @@ private:
 	int m_loglevel;
 
 public:
+	static const int LOG_ALL;
 	static const int LOG_DUMP;
 	static const int LOG_INFO;
 	static const int LOG_WARNING;

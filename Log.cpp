@@ -27,6 +27,7 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+const int CLog::LOG_ALL = 5000;
 const int CLog::LOG_DUMP = 50;
 const int CLog::LOG_INFO = 20;
 const int CLog::LOG_WARNING = 10;

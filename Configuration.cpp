@@ -534,10 +534,11 @@ void CConfiguration::SetAutoStart(const bool do_it)
 						if(do_it)
 						{
 							CString ourpath;
-							BOOL rv = GetModuleFileName(NULL, ourpath.GetBuffer(1000), 1000);
+							BOOL rv = GetModuleFileName(NULL, ourpath.GetBuffer(2000), 2000);
 							ourpath.ReleaseBuffer();
 							if(rv)
 							{
+								ourpath = "\""+ourpath+"\"";
 								regkey5.SetValue(ourpath, PROGRAMNAMEINRUN);
 							}
 

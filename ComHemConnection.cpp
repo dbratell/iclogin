@@ -124,12 +124,23 @@ bool CComHemConnection::Is_loggined() const
 			DetectLoginMethod(internet_session);
 		}
 
-		if(m_login_method == LOGIN_METHOD_OLD)
+		if(FindSubString(page, "logga ut") > 0)
+		{
+			g_log.Log("Finding 'logga ut'. Must be logged in.", 
+				CLog::LOG_DUMP);
+			return_value = true;
+		}
+		else if(m_login_method == LOGIN_METHOD_OLD)
 		{
 			GetUrl(internet_session, CConfiguration::GetLoginHost(), 
 				"/serviceSelection.php3", page);
 			page.MakeLower();
 			int kstart = FindSubString(page, "kabel-tv internet");
+			if(kstart<0)
+			{
+				g_log.Log("Didn't find kabel-tv. Looking for \"telia broadband\".", CLog::LOG_DUMP);
+				kstart = FindSubString(page, "telia broadband");
+			}
 			if(kstart>0 && FindSubString(page, "aktiv", kstart) != -1)
 			{
 				g_log.Log("Finding keywords.", CLog::LOG_DUMP);
@@ -490,7 +501,7 @@ bool CComHemConnection::LoginOldWay(CInternetSession &internet_session)
 	{
 		// Open two dummy places.
 		VisitUrl(internet_session, CConfiguration::GetLoginHost(), "/serviceSelection.php3");
-		VisitUrl(internet_session, "www.comhem.telia.se", "/ic");
+		VisitUrl(internet_session, "www.comhem.se", "/ic");
 	}
 	catch(CInternetException *cie)
 	{
@@ -520,7 +531,7 @@ bool CComHemConnection::LoginNewWay(CInternetSession &internet_session)
 	try 
 	{
 		// Open a dummy places.
-		VisitUrl(internet_session, "www.comhem.telia.se", "/ic");
+		VisitUrl(internet_session, "www.comhem.se", "/ic");
 	}
 	catch(CInternetException *cie)
 	{
@@ -706,6 +717,8 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 		http_connection->Close();
 		throw;
 	}
+
+	g_log.Log(data, CLog::LOG_ALL);
 
 	http_file->Close();
 	http_connection->Close();
