@@ -91,7 +91,6 @@ private:
 	void DisplayMessage(UINT message_id);
 	void SetupLoginTimer();
 	void SetLoginStatus(int status);
-	BOOL FindAnotherInstance();
 	void UpdateTimers();
 	void SetupLocalizedText();
 

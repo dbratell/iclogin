@@ -100,12 +100,6 @@ BOOL CIcloginDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	if(FindAnotherInstance())
-	{
-		::PostQuitMessage(0);
-		return true;
-	}
-
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
@@ -600,84 +594,6 @@ LRESULT CIcloginDlg::OnCommonMessage(WPARAM wparam, LPARAM)
 	return 1;
 }
 
-
-/**
- * Tries to locate another instance by sending the common message to
- * all windows. Only the other instance now how to interpret and answer
- * it. We send a message with our HWND as WPARAM. We then listen for a
- * message with a HWND as LPARAM and 0 as WPARAM and brings that window 
- * to the foreground.
- */
-BOOL CIcloginDlg::FindAnotherInstance()
-{
-	HWND hwnd = GetSafeHwnd();
-	if(!g_common_message)
-	{ 
-		AfxMessageBox(IDS_NOCOMMONMESSAGE, MB_SYSTEMMODAL| MB_OK | MB_ICONSTOP);
-		return false;
-	}
-
-	// Check if the program is already running.
-//	DWORD result;
-//	LRESULT rv=SendMessageTimeout(HWND_BROADCAST, g_common_message, 
-//		(WPARAM)hwnd, (LPARAM)hwnd, 0, 100000000, &result);
-	LRESULT rv=::SendMessage(HWND_BROADCAST, g_common_message, 
-		(WPARAM)hwnd, (LPARAM)0);
-	if(!rv)
-	{
-		LPVOID lpMsgBuf;
-		FormatMessage( 
-			FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-			FORMAT_MESSAGE_FROM_SYSTEM | 
-			FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL,
-			GetLastError(),
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-			(LPTSTR) &lpMsgBuf,
-			0,
-			NULL 
-		);
-		// Process any inserts in lpMsgBuf.
-		// ...
-		// Display the string.
-		::MessageBox( NULL, (LPCTSTR)lpMsgBuf, "Error", MB_OK | MB_ICONINFORMATION );
-		// Free the buffer.
-		LocalFree( lpMsgBuf );
-	}
-
-	// During half a second, check for message from someone
-	MSG msg;
-	for(int i=0; i<5; i++)
-	{
-		Sleep(100);
-		if(PeekMessage(
-			&msg,         // message information
-			hwnd,           // handle to window
-			g_common_message,  // first message
-			g_common_message,  // last message
-			PM_REMOVE))      // removal options
-		{
-			// Got a message from someone. We are not alone!
-			if(msg.message == g_common_message) // Could also be a WM_QUIT
-			{
-				if(msg.wParam == 0)
-				{
-					g_log.Log("Detecting already running instance. ");
-					HWND other_instance = (HWND)msg.lParam;
-					// But since the user wants one of us, let's pop up the other one.
-					// It can't do it self since only certain windows are allowed 
-					// to do ShowWindow on Windows 2000 and Windows 98.
-					::ShowWindow(other_instance, SW_SHOWNORMAL);
-					::SetForegroundWindow(other_instance);
-				}
-			}
-			return true;
-		}
-	}
-
-	// No answer. We're probably alone. 
-	return false;
-}
 
 void CIcloginDlg::OnAboutDialog() 
 {

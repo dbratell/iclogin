@@ -36,6 +36,8 @@ const char* const APPKEY = _T("IC Login");
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
+#if 0
+
 CConfiguration::CConfiguration()
 {
 
@@ -46,6 +48,7 @@ CConfiguration::~CConfiguration()
 
 }
 
+#endif
 
 void  CConfiguration::CleanRegistry()
 {

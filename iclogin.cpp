@@ -5,6 +5,7 @@
 #include "iclogin.h"
 #include "icloginDlg.h"
 #include "Configuration.h"
+#include "InstanceChecker.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -12,7 +13,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const char* const IC_VERSIONSTRING = "version 0.3.3";
+const char* const IC_VERSIONSTRING = "version 0.3.4";
 
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginApp
@@ -46,6 +47,13 @@ CIcloginApp theApp;
 
 BOOL CIcloginApp::InitInstance()
 {
+	if(CInstanceChecker::AlreadyRunning())
+	{
+//		AfxMessageBox(_T("Previous version detected, will now restore it"), MB_OK);
+		CInstanceChecker::ActivateOtherInstance();
+		return FALSE;
+	}
+
 	if (!AfxSocketInit())
 	{
 		AfxMessageBox(IDP_SOCKETS_INIT_FAILED);
@@ -75,6 +83,8 @@ BOOL CIcloginApp::InitInstance()
 	if(m_pMainWnd)
 	{
 		((CIcloginDlg *)m_pMainWnd)->Create();
+		if (!CInstanceChecker::AlreadyRunning())
+				CInstanceChecker::SetOurselfAsRunning();
 		if(CConfiguration::GetStartHidden())
 		{
 			m_pMainWnd->ShowWindow(SW_HIDE);
