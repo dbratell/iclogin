@@ -25,6 +25,7 @@ const _TCHAR* const HIDEPASSWORDKEY = _T("HidePassword");
 const _TCHAR* const STARTHIDDENKEY = _T("StartHidden");
 const _TCHAR* const ISCONFIGUREDKEY = _T("IsConfigured");
 const _TCHAR* const AUTOSTARTKEY = _T("AutoStart");
+const _TCHAR* const MINIMIZEMEMORYUSAGEKEY = _T("MinimizeMemoryUsage");
 const _TCHAR* const LOGTOFILEKEY = _T("LogToFile");
 const _TCHAR* const LOGFILEKEY = _T("LogFile");
 const _TCHAR* const LOGLEVELKEY = _T("LogLevel");
@@ -251,6 +252,21 @@ void CConfiguration::SetLogToFile(const bool do_it)
 		SetIntData(LOGTOFILEKEY, 1);
 	else
 		SetIntData(LOGTOFILEKEY, 0);
+}
+
+
+const bool CConfiguration::GetMinimizeMemoryUsage()
+{
+	return (GetIntData(MINIMIZEMEMORYUSAGEKEY, 1) != 0);
+}
+
+
+void CConfiguration::SetMinimizeMemoryUsage(const bool do_it)
+{
+	if(do_it)
+		SetIntData(MINIMIZEMEMORYUSAGEKEY, 1);
+	else
+		SetIntData(MINIMIZEMEMORYUSAGEKEY, 0);
 }
 
 

@@ -102,6 +102,8 @@ private:
 	void SetDialogTitle();
 	void RotateIcons();
 	void LoadIcons();
+	void MinimizeMemoryUsage(bool reallyminimize = false);
+	void OnThreadTerminated();
 
 // Attributes
 	UINT m_logintimer;

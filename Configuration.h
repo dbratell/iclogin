@@ -36,6 +36,8 @@ public:
 	static void SetIsConfigured(bool do_it);
 	static const bool GetAutoStart();
 	static void SetAutoStart(bool do_it);
+	static const bool GetMinimizeMemoryUsage();
+	static void SetMinimizeMemoryUsage(bool do_it);
 	static const bool GetLogToFile();
 	static void SetLogToFile(bool do_it);
 	static const CString GetLogFile();

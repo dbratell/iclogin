@@ -9,6 +9,7 @@
 #include "ConfigurationDialog.h"
 #include "AboutDialog.h"
 #include "icmessages.h"
+#include <process.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -304,10 +305,24 @@ LRESULT CIcloginDlg::OnLoginThreadStarted(WPARAM, LPARAM)
 
 LRESULT CIcloginDlg::OnLoginThreadTerminated(WPARAM, LPARAM)
 {
-	CSingleLock lock(&m_thread_counter_mutex, true);
-	--m_thread_counter;
+	OnThreadTerminated();
 	return 0;
 }
+
+void CIcloginDlg::OnThreadTerminated()
+{
+	CSingleLock lock(&m_thread_counter_mutex, true);
+	ASSERT(m_thread_counter > 0);
+	--m_thread_counter;
+	if(m_thread_counter == 0)
+	{
+		if(CConfiguration::GetMinimizeMemoryUsage())
+		{
+			MinimizeMemoryUsage(true);
+		}
+	}
+}
+
 
 LRESULT CIcloginDlg::OnLogoutThreadStarted(WPARAM, LPARAM)
 {
@@ -324,8 +339,8 @@ LRESULT CIcloginDlg::OnLogoutThreadStarted(WPARAM, LPARAM)
 
 LRESULT CIcloginDlg::OnLogoutThreadTerminated(WPARAM, LPARAM)
 {
-	CSingleLock lock(&m_thread_counter_mutex, true);
-	--m_thread_counter;
+	OnThreadTerminated();
+
 	return 0;
 }
 
@@ -929,4 +944,44 @@ CString CIcloginDlg::GetLocalIpNumber()
  
  	WSACleanup();
 	return "";
+}
+
+typedef BOOL (__stdcall *SetProcessWorkingSetSize_Func)(HANDLE hProcess, DWORD dwMinimumWorkingSetSize, DWORD dwMaximumWorkingSetSize);
+
+void CIcloginDlg::MinimizeMemoryUsage(bool reallyminimize /* = false */)
+{
+	if(!IsWindowsNT())
+	{
+		return;
+	}
+
+	DWORD pid = _getpid();
+	HANDLE process = OpenProcess(PROCESS_SET_QUOTA, FALSE, pid);
+	if(!process)
+	{
+		int error = GetLastError();
+	}
+
+	HINSTANCE kernel32dll = LoadLibrary(_T("kernel32.dll"));
+	if(!kernel32dll)
+	{
+		return;
+	}
+	SetProcessWorkingSetSize_Func func;
+	func = (SetProcessWorkingSetSize_Func)
+		GetProcAddress(kernel32dll, "SetProcessWorkingSetSize");
+
+	int minsize = 1;
+	int maxsize = 2*1048576;
+	if(reallyminimize)
+	{
+		minsize = maxsize = -1;
+	}
+	if(process && func && !func(process, minsize, maxsize))
+	{
+		int error = GetLastError();
+	}
+
+	FreeLibrary(kernel32dll);
+	CloseHandle(process);
 }
