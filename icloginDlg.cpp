@@ -29,7 +29,8 @@ CIcloginDlg::CIcloginDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CIcloginDlg::IDD, pParent),
 	m_logintimer(0), m_loggedintimespan(0), m_loggedouttimespan(0), 
 	m_failedlastlogin(false), m_startingup(true), m_currentstatus(0),
-	m_expectedstatus(0)
+	m_expectedstatus(0), m_everlogin(false), m_everlogout(false)
+
 {
 	//{{AFX_DATA_INIT(CIcloginDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -119,7 +120,7 @@ BOOL CIcloginDlg::OnInitDialog()
 		CConfiguration::SetIsConfigured(true);
 	}
 
-	AddTrayIcon();
+	m_trayicon.Init(this);
 
 	CString buttontext;
 	buttontext.LoadString(IDS_LOGINBUTTONTEXT);
@@ -230,7 +231,8 @@ LRESULT CIcloginDlg::OnLoginFailed(WPARAM, LPARAM)
 LRESULT CIcloginDlg::OnLoginAlreadyLogin(WPARAM, LPARAM)
 {
 	m_failedlastlogin = false;
-	DisplayMessage(IDS_LOGINALREADYLOGIN);
+	// DisplayMessage(IDS_LOGINALREADYLOGIN);
+	DisplayMessage(IDS_LOGINSUCCEEDED);
 	m_messagetext2.SetWindowText(_T(""));
 	SetLoginStatus(1);
 	return 0;
@@ -315,13 +317,6 @@ void CIcloginDlg::OnTimer(UINT nIDEvent)
 
 void CIcloginDlg::OnDestroy() 
 {
-	NOTIFYICONDATA nid;
-	nid.cbSize = sizeof(nid);
-	nid.hWnd = *this;
-	nid.uID = TRAYICONID;
-	nid.uFlags = 0;
-	Shell_NotifyIcon(NIM_DELETE, &nid);
-
 	if(m_logintimer != 0)
 		KillTimer(m_logintimer);
 
@@ -446,8 +441,9 @@ void CIcloginDlg::OnConfigurebutton()
 // the mouse or keyboard message associated with the event. For example, when 
 // the mouse cursor moves over a taskbar icon, lParam is set to 
 // WM_MOUSEMOVE. See the Taskbar guide chapter for further discussion. 
-LRESULT CIcloginDlg::OnTrayIcon(WPARAM, LPARAM lparam)
+LRESULT CIcloginDlg::OnTrayIcon(WPARAM wparam, LPARAM lparam)
 {
+	return m_trayicon.HandleMessage(wparam, lparam);
 	switch(lparam)
 	{
 	case WM_LBUTTONDBLCLK:
@@ -498,15 +494,36 @@ LRESULT CIcloginDlg::OnTrayIcon(WPARAM, LPARAM lparam)
 
 void CIcloginDlg::OnSize(UINT nType, int cx, int cy) 
 {
+	TRACE("OnSize: type = ");
+	switch(nType)
+	{
+	case SIZE_MINIMIZED: TRACE("SIZE_MINIMIZED"); break;
+	case SIZE_MAXIMIZED: TRACE("SIZE_MAXIMIZED"); break;
+	case SIZE_RESTORED   : TRACE("SIZE_RESTORED"); break;
+	case SIZE_MAXHIDE   : TRACE("SIZE_MAXHIDE"); break;
+	case SIZE_MAXSHOW: TRACE("SIZE_MAXSHOW"); break;
+	default: TRACE1("%d", nType);
+	}
+	
+	TRACE2(" cx=%d. cy=%d\n", cx, cy);
+
+	if(m_startingup && 
+		CConfiguration::GetStartHidden() && 
+		nType == SIZE_RESTORED)
+	{
+		// To force ourself into hiding. 
+		// There must be a better way to do it!
+		PostMessage(WM_SIZE, SIZE_MINIMIZED); 
+		m_startingup = false;
+	}
 	if(nType == SIZE_MINIMIZED)
 	{
 		ShowWindow(SW_HIDE);
 	}
-	else
+	else 
 	{ 
 		CDialog::OnSize(nType, cx, cy);
 	}
-
 }
 
 
@@ -518,17 +535,24 @@ void CIcloginDlg::OnSize(UINT nType, int cx, int cy)
 void CIcloginDlg::SetLoginStatus(int status)
 {
 	HICON icon = NULL;
+	CString tooltip;
 
 	switch(status)
 	{
 	case -1: // Not logged in
 		icon = AfxGetApp()->LoadIcon(IDI_SAD);
+		m_everlogout = true;
+		m_lastlogouttime = CTime::GetCurrentTime();
+		m_trayicon.SetLogout(m_lastlogouttime);
 		break;
 	case 0: // Unknown
 		icon = AfxGetApp()->LoadIcon(IDI_QUESTIONICON);
 		break;
 	case 1: // Logged in
 		icon = AfxGetApp()->LoadIcon(IDI_HAPPY);
+		m_everlogin = true;
+		m_lastlogintime = CTime::GetCurrentTime();
+		m_trayicon.SetLogin(m_lastlogintime);
 		break;
 	default:
 		ASSERT(false);
@@ -639,9 +663,9 @@ BOOL CIcloginDlg::FindAnotherInstance()
 		LocalFree( lpMsgBuf );
 	}
 
-	// During a second, check for message from someone
+	// During half a second, check for message from someone
 	MSG msg;
-	for(int i=0; i<10; i++)
+	for(int i=0; i<5; i++)
 	{
 		Sleep(100);
 		if(PeekMessage(
@@ -657,7 +681,9 @@ BOOL CIcloginDlg::FindAnotherInstance()
 				if(msg.wParam == 0)
 				{
 					HWND other_instance = (HWND)msg.lParam;
-//	// But since the user wants one of us, let's pop up.
+//	// But since the user wants one of us, let's pop up the other one.
+					// It can't do it self since only certain windows are allowed 
+					// to do ShowWindow on Windows 2000 and Windows 98.
 					::ShowWindow(other_instance, SW_SHOWNORMAL);
 					::SetForegroundWindow(other_instance);
 				}
@@ -675,20 +701,6 @@ void CIcloginDlg::OnAboutDialog()
 	CAboutDialog dialog;
 
 	dialog.DoModal();
-}
-
-void CIcloginDlg::AddTrayIcon()
-{
-		// Add tray icon
-	NOTIFYICONDATA nid;
-	nid.cbSize = sizeof(nid);
-	nid.hWnd = *this;
-	nid.uID = TRAYICONID;
-	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-	nid.uCallbackMessage = IC_TRAYICON;
-	nid.hIcon = m_hIcon = AfxGetApp()->LoadIcon(IDI_TRAYICON); // XXX New icon
-	strcpy(nid.szTip, _T("IC Login"));
-	Shell_NotifyIcon(NIM_ADD, &nid);
 }
 
 //Notification handler
@@ -710,9 +722,21 @@ BOOL CIcloginDlg::OnToolTipNotify(UINT id, NMHDR *pNMHDR, LRESULT *pResult)
    {
    case IDC_LOGINBUTTON:
 	   strTipText.LoadString(IDS_LOGINBUTTONTOOLTIP);
+	   if(m_everlogin)
+	   {
+		   strTipText += _T(" (");
+		   strTipText += m_lastlogintime.Format(IDS_LASTLOGOUTTIME);
+		   strTipText += _T(")");
+	   }
 	   break;
    case IDC_LOGOUTBUTTON:
 	   strTipText.LoadString(IDS_LOGOUTBUTTONTOOLTIP);
+	   if(m_everlogout)
+	   {
+		   strTipText += _T(" (");
+		   strTipText += m_lastlogouttime.Format(IDS_LASTLOGOUTTIME);
+		   strTipText += _T(")");
+	   }
 	   break;
    case IDC_CONFIGUREBUTTON:
 	   strTipText.LoadString(IDS_CONFIGUREBUTTONTOOLTIP);

@@ -11,6 +11,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+const char* const IC_VERSIONSTRING = "version 0.3.2";
 
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginApp

@@ -194,6 +194,9 @@ BEGIN
     IDS_LOGINBUTTONTOOLTIP  "Login to Com Hem Internet Cable"
     IDS_LOGOUTBUTTONTOOLTIP "Logout from Com Hem Internet Cable"
     IDS_CONFIGUREBUTTONTOOLTIP "Setup IC Login"
+    IDS_DEFAULTTIMEFORMAT   "%H:%M:%S"
+    IDS_LASTLOGINTIME       "Last login: %H:%M:%S"
+    IDS_LASTLOGOUTTIME      "Last logout: %H:%M:%S"
 END
 
 #endif    // English (U.S.) resources
@@ -259,6 +262,8 @@ IDI_TRAYICON            ICON    DISCARDABLE     "res\\trayicon.ico"
 IDI_HAPPY               ICON    DISCARDABLE     "res\\happy.ico"
 IDI_SAD                 ICON    DISCARDABLE     "res\\sad.ico"
 IDI_QUESTIONICON        ICON    DISCARDABLE     "res\\question.ico"
+IDI_TRAYPLUS            ICON    DISCARDABLE     "res\\trayplus.ico"
+IDI_TRAYMINUS           ICON    DISCARDABLE     "res\\trayminu.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -270,22 +275,22 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Config <localize>"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,206,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,206,24,50,14
+    RTEXT           "username <loc>",IDC_CONFIGUSERNAMELABEL,7,10,39,8
+    EDITTEXT        IDC_USERNAMEFIELD,51,7,81,14,ES_AUTOHSCROLL
+    RTEXT           "Pass <local>",IDC_CONFIGPASSWORDLABEL,7,26,39,8
+    EDITTEXT        IDC_PASSWORDFIELD,51,23,81,14,ES_AUTOHSCROLL
+    CONTROL         "hide <local>",IDC_HIDEPASSWORD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,138,26,67,10
     CONTROL         "loginatstartup <local>",IDC_LOGINATSTARTUPCHECKBOX,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,58,83,10
-    EDITTEXT        IDC_USERNAMEFIELD,51,7,81,14,ES_AUTOHSCROLL
-    RTEXT           "username <loc>",IDC_CONFIGUSERNAMELABEL,7,10,39,8
-    EDITTEXT        IDC_PASSWORDFIELD,51,23,81,14,ES_AUTOHSCROLL
-    RTEXT           "Pass <local>",IDC_CONFIGPASSWORDLABEL,7,26,39,8
     CONTROL         "Interval <local>",IDC_LOGINATINTERVAL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,16,74,64,10
     EDITTEXT        IDC_LOGININTERVALFIELD,81,72,40,14,ES_AUTOHSCROLL
-    CONTROL         "hide <local>",IDC_HIDEPASSWORD,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,138,26,67,10
     LTEXT           "minut <loc>",IDC_LOGINATINTERVALUNIT,127,75,42,8
     CONTROL         "start hidden<loc>",IDC_STARTHIDDEN,"Button",
-                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,166,58,70,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,166,58,70,10
+    DEFPUSHBUTTON   "OK",IDOK,206,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,206,24,50,14
 END
 
 IDD_ABOUTDIALOG DIALOG DISCARDABLE  0, 0, 186, 95
@@ -294,10 +299,13 @@ CAPTION "About IC Login"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "Close",IDOK,129,74,50,14
-    LTEXT           "IC Login",IDC_STATIC,45,18,27,8
+    LTEXT           "IC Login",IDC_STATIC,44,14,27,8
     LTEXT           "A program that sets up and keeps the connection on Com Hem's Internet Cable",
-                    IDC_STATIC,43,40,127,29
-    LTEXT           "version 0.3.1",IDC_STATIC,87,18,42,8
+                    IDC_STATIC,44,27,127,29
+    LTEXT           "<set>",IDC_VERSIONLABEL,87,14,83,8
+    LTEXT           "Copyright (c) 2000 Daniel Bratell",IDC_STATIC,44,57,102,
+                    8
+    LTEXT           "bratell@lysator.liu.se",IDC_STATIC,44,68,65,8
 END
 
 

@@ -8,10 +8,10 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "TrayIcon.h"
 
 #define LOGINTIMER 1284
 #define UPDATETIMER 1433
-#define TRAYICONID 1
 
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginDlg dialog
@@ -86,7 +86,6 @@ private:
 	void SetLoginStatus(int status);
 	BOOL FindAnotherInstance();
 	void UpdateTimers();
-	void AddTrayIcon();
 
 
 // Attributes
@@ -98,9 +97,11 @@ private:
 
 	CTimeSpan m_loggedintimespan, m_loggedouttimespan;
 	CTime m_laststatustime;
-
+	bool m_everlogin, m_everlogout;
+	CTime m_lastlogintime, m_lastlogouttime;
 	bool m_startingup;
 
+	CTrayIcon m_trayicon;
 };
 
 //{{AFX_INSERT_LOCATION}}

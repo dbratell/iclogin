@@ -29,11 +29,16 @@ private:
 						   CString& data);
 	static void VisitUrl(CInternetSession& internet_session, 
 						   const CString& host, const CString & file);
-	static bool PostLogin(CInternetSession &is, CString timestamp);
+	static bool PostLogin(CInternetSession &is, 
+		const CString &timestamp,
+		const CString &login_page);
+	static bool	Login_old_way(CInternetSession &internet_session);
+	static bool	Login_new_way(CInternetSession &internet_session);
 
 
 	// Attributes
 	CWnd *m_parent_window;
+	static int m_login_method;
 };
 
 

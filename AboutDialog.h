@@ -19,7 +19,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CAboutDialog)
 	enum { IDD = IDD_ABOUTDIALOG };
-		// NOTE: the ClassWizard will add data members here
+	CStatic	m_versionlabel;
 	//}}AFX_DATA
 
 
@@ -35,7 +35,7 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CAboutDialog)
-		// NOTE: the ClassWizard will add member functions here
+	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

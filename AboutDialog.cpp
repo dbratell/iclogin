@@ -28,16 +28,26 @@ void CAboutDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CAboutDialog)
-		// NOTE: the ClassWizard will add DDX and DDV calls here
+	DDX_Control(pDX, IDC_VERSIONLABEL, m_versionlabel);
 	//}}AFX_DATA_MAP
 }
 
 
 BEGIN_MESSAGE_MAP(CAboutDialog, CDialog)
 	//{{AFX_MSG_MAP(CAboutDialog)
-		// NOTE: the ClassWizard will add message map macros here
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CAboutDialog message handlers
+
+BOOL CAboutDialog::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+	
+	m_versionlabel.SetWindowText(IC_VERSIONSTRING);
+	// TODO: Add extra initialization here
+	
+	return TRUE;  // return TRUE unless you set the focus to a control
+	              // EXCEPTION: OCX Property Pages should return FALSE
+}

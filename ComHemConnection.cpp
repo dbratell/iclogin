@@ -15,6 +15,9 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+#define LOGIN_METHOD_UNKNOWN 0
+#define LOGIN_METHOD_OLD 1
+#define LOGIN_METHOD_NEW 2
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -32,6 +35,10 @@ CComHemConnection::~CComHemConnection()
 
 }
 
+// This variable will be used on many threads at once. It is not critical 
+// that the value is correct as long as it is either the old or the
+// new value that we get.
+int CComHemConnection::m_login_method = LOGIN_METHOD_UNKNOWN;
 
 /**
  * Extracts the timestamp. Returns 0 if everything ok. Something negative otherwise.
@@ -118,25 +125,97 @@ bool CComHemConnection::Login() const
 	}
 
 	CICInternetSession internet_session(m_parent_window);
-	auto_ptr<CHttpConnection> http_connection;
-	auto_ptr<CHttpFile> http_file;
+	CString page;
+	// Detect login method
+	if(m_login_method == LOGIN_METHOD_UNKNOWN)
+	{
+		try {
+			GetUrl(internet_session, CConfiguration::GetLoginHost(),
+				"/", page);
+			page.MakeLower();
+			if(page.Find("login.php3") != -1)
+			{
+				m_login_method = LOGIN_METHOD_OLD;
+			}
+			else if(page.Find("sd/") != -1)
+			{
+				m_login_method = LOGIN_METHOD_NEW;
+			}
+		} catch (...) {
+			m_parent_window->PostMessage(IC_LOGINFAILED);
+			internet_session.Close();
+			return false;
+		} 
+	}
+
+	// Make a copy to avoid race conditions.
+	int our_login_method = m_login_method; 
+	if(our_login_method == LOGIN_METHOD_OLD)
+	{
+		if(!Login_old_way(internet_session))
+		{
+			m_parent_window->PostMessage(IC_LOGINFAILED);
+			internet_session.Close();
+			return false;
+		}
+	}
+	else if(our_login_method == LOGIN_METHOD_NEW)
+	{
+		if(!Login_new_way(internet_session))
+		{
+			m_parent_window->PostMessage(IC_LOGINFAILED);
+			internet_session.Close();
+			return false;
+		}
+	}
+	else if(our_login_method == LOGIN_METHOD_UNKNOWN)
+	{
+		// Try first old, then new
+		if(!Login_old_way(internet_session))
+		{
+			if(!Login_new_way(internet_session))
+			{
+				m_parent_window->PostMessage(IC_LOGINFAILED);
+				internet_session.Close();
+				return false;
+			}
+			else
+			{
+				m_login_method = LOGIN_METHOD_NEW;
+			}
+		}
+		else
+		{
+			m_login_method = LOGIN_METHOD_OLD;
+		}
+	}
+	else
+	{
+		ASSERT(false); // What the...
+	}
+
+	internet_session.Close();
+
+	m_parent_window->PostMessage(IC_LOGINSUCCEEDED);
+	return true;
+}
+
+bool CComHemConnection::Login_old_way(CInternetSession &internet_session)
+{
 	CString page;
 	try {
 		GetUrl(internet_session, CConfiguration::GetLoginHost(),
 			"/login.php3", page);
-		page.MakeLower();
 	} catch (...) {
-		m_parent_window->PostMessage(IC_LOGINFAILED);
-		internet_session.Close();
 		return false;
 	} 
 
+	page.MakeLower();
 	if(page.Find("password") == -1 && page.Find("username") == -1)
 	{
 		// Something wrong. Fail!
 		TRACE("Already logged in.\n");
 		// ASSERT(false); // Why wasn't this trapped above?
-		m_parent_window->PostMessage(IC_LOGINFAILED);
 		return false;
 	}
 
@@ -144,10 +223,8 @@ bool CComHemConnection::Login() const
 	int rv = ExtractTimestamp(page, timestamp);
 	
 	if(rv<0) timestamp.Empty();
-	if(!PostLogin(internet_session, timestamp))
+	if(!PostLogin(internet_session, timestamp, _T("/userlookup.php3")))
 	{
-		internet_session.Close();
-		m_parent_window->PostMessage(IC_LOGINFAILED);
 		return false;
 	}
 
@@ -160,17 +237,41 @@ bool CComHemConnection::Login() const
 	}
 	catch(CInternetException *cie)
 	{
-		cie->ReportError();
-		m_parent_window->PostMessage(IC_LOGINFAILED);
-		internet_session.Close();
 		return false;
 	}
 
-	internet_session.Close();
-
-	m_parent_window->PostMessage(IC_LOGINSUCCEEDED);
 	return true;
 }
+
+
+bool CComHemConnection::Login_new_way(CInternetSession &internet_session)
+{
+	try {
+		VisitUrl(internet_session, CConfiguration::GetLoginHost(), _T("/sd/init"));
+	} catch (...) {
+		return false;
+	} 
+
+	if(!PostLogin(internet_session, _T(""), _T("/sd/login")))
+	{
+		return false;
+	}
+
+
+	try 
+	{
+		// Open two dummy places.
+//		VisitUrl(internet_session, CConfiguration::GetLoginHost(), "/serviceSelection.php3");
+//		VisitUrl(internet_session, "www.comhem.telia.se", "/ic");
+	}
+	catch(CInternetException *cie)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 
 
 bool CComHemConnection::Logout() const
@@ -260,7 +361,9 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 }
 
 
-bool CComHemConnection::PostLogin(CInternetSession &internet_session, CString timestamp)
+bool CComHemConnection::PostLogin(CInternetSession &internet_session, 
+								  const CString& timestamp, 
+								  const CString& login_page)
 {
 	auto_ptr<CHttpConnection> http_connection;
 	auto_ptr<CHttpFile> http_file;
@@ -296,7 +399,7 @@ bool CComHemConnection::PostLogin(CInternetSession &internet_session, CString ti
 
 	try {
 		http_file = auto_ptr<CHttpFile>(http_connection->OpenRequest(
-			CHttpConnection::HTTP_VERB_POST, "/userlookup.php3", 
+			CHttpConnection::HTTP_VERB_POST, login_page, 
 			NULL, 1, NULL, NULL, 
 			INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE));
 	} catch (...) {

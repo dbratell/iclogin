@@ -14,6 +14,8 @@
 
 #include "resource.h"		// main symbols
 
+extern const char* const IC_VERSIONSTRING;
+
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginApp:
 // See iclogin.cpp for the implementation of this class
