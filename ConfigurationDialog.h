@@ -1,3 +1,18 @@
+/**
+ * This file is a part of IC Login (c) Daniel Bratell 2000
+ *
+ * That the source code is publicized on Internet does not mean that
+ * it's free to use. You are allowed to be inspired by it, but if you
+ * do patches of your own you must submit them to the original author.
+ *
+ * Also, you mustn't redistribute the source code. If you want to
+ * make other people see it, point them to 
+ * 
+ * http://www.lysator.liu.se/~bratell/iclogin/
+ *
+ * Original Author: Daniel Bratell <bratell@lysator.liu.se>
+ */
+
 #if !defined(AFX_CONFIGURATIONDIALOG_H__973E90AE_53C4_4B50_8F10_B432EBFF7C18__INCLUDED_)
 #define AFX_CONFIGURATIONDIALOG_H__973E90AE_53C4_4B50_8F10_B432EBFF7C18__INCLUDED_
 
