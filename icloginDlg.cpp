@@ -261,6 +261,7 @@ LRESULT CIcloginDlg::OnLoginSucceeded(WPARAM, LPARAM)
 		KillTimer(m_restartdhcptimer);
 		m_restartdhcptimer = 0;
 	}
+	SetupLoginTimer();
 	return 0;
 }
 
@@ -307,6 +308,7 @@ LRESULT CIcloginDlg::OnLoginAlreadyLogin(WPARAM, LPARAM)
 	// DisplayMessage(IDS_LOGINSUCCEEDED);
 	m_messagetext2.SetWindowText(_T(""));
 	SetLoginStatus(1);
+	SetupLoginTimer();
 	return 0;
 }
 
