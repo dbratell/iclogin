@@ -235,7 +235,7 @@ bool CComHemConnection::Login_old_way(CInternetSession &internet_session)
 		VisitUrl(internet_session, CConfiguration::GetLoginHost(), "/serviceSelection.php3");
 		VisitUrl(internet_session, "www.comhem.telia.se", "/ic");
 	}
-	catch(CInternetException *cie)
+	catch(...)
 	{
 		return false;
 	}
@@ -253,18 +253,6 @@ bool CComHemConnection::Login_new_way(CInternetSession &internet_session)
 	} 
 
 	if(!PostLogin(internet_session, _T(""), _T("/sd/login")))
-	{
-		return false;
-	}
-
-
-	try 
-	{
-		// Open two dummy places.
-//		VisitUrl(internet_session, CConfiguration::GetLoginHost(), "/serviceSelection.php3");
-//		VisitUrl(internet_session, "www.comhem.telia.se", "/ic");
-	}
-	catch(CInternetException *cie)
 	{
 		return false;
 	}
@@ -334,7 +322,7 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 
 	try {
 		http_file->SendRequest();
-	} catch (CInternetException *ie) {
+	} catch (...) {
 		TRACE("Couldn't open connection (SendRequest)!\n");
 		http_file->Abort();
 		http_connection->Close();
@@ -351,7 +339,7 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 			// TRACE("\n");
 		}
 	} catch (CInternetException ie) {
-		http_file->Close();
+		http_file->Abort();
 		http_connection->Close();
 		throw;
 	}

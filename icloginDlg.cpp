@@ -704,7 +704,7 @@ void CIcloginDlg::OnAboutDialog()
 }
 
 //Notification handler
-BOOL CIcloginDlg::OnToolTipNotify(UINT id, NMHDR *pNMHDR, LRESULT *pResult)
+BOOL CIcloginDlg::OnToolTipNotify(UINT, NMHDR *pNMHDR, LRESULT *pResult)
 {
    // need to handle both ANSI and UNICODE versions of the message
    TOOLTIPTEXTA* pTTTA = (TOOLTIPTEXTA*)pNMHDR;
