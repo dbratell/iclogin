@@ -135,6 +135,7 @@ bool CComHemConnection::Is_loggined() const
 				g_log.Log("Finding keywords.", CLog::LOG_DUMP);
 				return_value = true;
 
+#if 0
 				// Extended logintest?
 				if(CConfiguration::GetExtendedLoggedInTest())
 				{
@@ -146,6 +147,7 @@ bool CComHemConnection::Is_loggined() const
 						return_value = ExtendedLoggedInTest(internet_session);
 					}
 				}
+#endif
 			}
 			else
 			{
@@ -168,6 +170,7 @@ bool CComHemConnection::Is_loggined() const
 			{
 				g_log.Log("No 'pwdenter'. Logged in.", CLog::LOG_DUMP);
 				return_value = true;
+#if 0
 				// Extended logintest?
 				static counter = 0;
 				counter = (counter + 1) % 3;
@@ -175,6 +178,7 @@ bool CComHemConnection::Is_loggined() const
 				{
 					return_value = ExtendedLoggedInTest(internet_session);
 				}
+#endif
 			}
 		}
 		else if(m_login_method == LOGIN_METHOD_UNKNOWN)
@@ -186,6 +190,7 @@ bool CComHemConnection::Is_loggined() const
 	return return_value;
 }
 
+#if 0
 bool CComHemConnection::ExtendedLoggedInTest(CInternetSession &internet_session)
 {
 	static lasturl = -1;
@@ -239,7 +244,7 @@ bool CComHemConnection::ExtendedLoggedInTest(CInternetSession &internet_session)
 	// Did all tries, and none succeeded. We are not logged in after all.
 	return false;
 }
-
+#endif
 
 void CComHemConnection::DetectLoginMethod(
 			CInternetSession &internet_session) const
@@ -452,7 +457,7 @@ bool CComHemConnection::RestartDHCP() const
 
 bool CComHemConnection::LoginOldWay(CInternetSession &internet_session)
 {
-	g_log.Log("Loggin in with old method.");
+	g_log.Log("Loggin in with old method (FLS).");
 	CString page;
 	try {
 		GetUrl(internet_session, CConfiguration::GetLoginHost(),
@@ -499,7 +504,7 @@ bool CComHemConnection::LoginOldWay(CInternetSession &internet_session)
 
 bool CComHemConnection::LoginNewWay(CInternetSession &internet_session)
 {
-	g_log.Log("Loggin in with new method.");
+	g_log.Log("Loggin in with new method. (ELAS)");
 	try {
 		VisitUrl(internet_session, CConfiguration::GetLoginHost(), _T("/sd/init"));
 	} catch (CInternetException *cie) {

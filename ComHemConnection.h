@@ -52,7 +52,9 @@ private:
 	static bool PostLogin(CInternetSession &is, 
 		const CString &timestamp,
 		const CString &login_page);
+#if 0
 	static bool	ExtendedLoggedInTest(CInternetSession &internet_session);
+#endif
 	static bool	LoginOldWay(CInternetSession &internet_session);
 	static bool	LoginNewWay(CInternetSession &internet_session);
 	static void LogInternetError(const CInternetSession &internet_session,

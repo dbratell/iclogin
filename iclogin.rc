@@ -58,8 +58,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,0,0
- PRODUCTVERSION 0,9,0,0
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -77,14 +77,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Daniel Bratell\0"
             VALUE "FileDescription", "IC Login\0"
-            VALUE "FileVersion", "0.999\0"
+            VALUE "FileVersion", "1.0\0"
             VALUE "InternalName", "iclogin\0"
-            VALUE "LegalCopyright", "Copyright (C) 2000\0"
+            VALUE "LegalCopyright", "Copyright (C) 2001\0"
             VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "iclogin.EXE\0"
+            VALUE "OriginalFilename", "iclogin.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "IC Login\0"
-            VALUE "ProductVersion", "0.9\0"
+            VALUE "ProductVersion", "1.0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -320,7 +320,7 @@ BEGIN
     LTEXT           "A program that sets up and keeps the connection on Com Hem's Internet Cable",
                     IDC_STATIC,44,27,127,29
     LTEXT           "<set>",IDC_VERSIONLABEL,87,14,83,8
-    LTEXT           "Copyright (c) 2000 Daniel Bratell",IDC_STATIC,44,57,102,
+    LTEXT           "Copyright (c) 2001 Daniel Bratell",IDC_STATIC,44,57,102,
                     8
     PUSHBUTTON      "the url",IDC_APPURL,22,71,153,14,BS_FLAT
     LTEXT           "<scroll>",IDC_SCROLLTEXT,25,89,116,14

@@ -446,6 +446,7 @@ void CConfiguration::SetServiceLongName(const CString &name)
 	SetStringData(SERVICEDISPLAYNAMEKEY, name);
 }
 
+#if 0
 bool CConfiguration::GetExtendedLoggedInTest()
 {
 	return (GetIntData(EXTENDEDLOGGEDINKEY, 0) != 0);
@@ -455,7 +456,7 @@ void CConfiguration::SetExtendedLoggedInTest(bool do_it)
 {
 	SetIntData(EXTENDEDLOGGEDINKEY, do_it?1:0);
 }
-
+#endif
 
 const bool CConfiguration::GetVisibleAsService()
 {

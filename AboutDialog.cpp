@@ -117,7 +117,7 @@ void CAboutDialog::OnAppurl()
  * CREDITS: 
  * Jonas Svensson (testare, idéspruta)
  * Andréas Bratell (testare, idévulkan)
- * Marcus Comstedt (vars script gav insikt i hur nya inloggninssystemet fungerade)
+ * Marcus Comstedt (vars script gav insikt i hur nya inloggningssystemet fungerade)
  * Calle Englund (dito)
  */
 void CAboutDialog::OnDestroy() 

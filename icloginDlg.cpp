@@ -183,7 +183,7 @@ void CIcloginDlg::SetDialogTitle()
 }
 
 
-// If you add a minimize button to your dialog, you will need the code below
+//  If you add a minimize button to your dialog, you will need the code below
 //  to draw the icon.  For MFC applications using the document/view model,
 //  this is automatically done for you by the framework.
 
@@ -723,14 +723,22 @@ void CIcloginDlg::SetLoginStatus(int status)
 void CIcloginDlg::UpdateTimers()
 {
 	CTime now = CTime::GetCurrentTime();
-	switch(m_currentstatus)
+
+	if(now <= m_laststatustime)
 	{
-	case -1:
-		m_loggedouttimespan += (now-m_laststatustime);
-		break;
-	case 1:
-		m_loggedintimespan += (now-m_laststatustime);
-		break;
+		ASSERT(false);
+	}
+	else
+	{
+		switch(m_currentstatus)
+		{
+		case -1:
+			m_loggedouttimespan += (now-m_laststatustime);
+			break;
+		case 1:
+			m_loggedintimespan += (now-m_laststatustime);
+			break;
+		}
 	}
 	m_laststatustime = now;
 

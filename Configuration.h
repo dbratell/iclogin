@@ -36,8 +36,10 @@ public:
 	static bool IsWritable();
 	static const int GetRegistryConfigurationVersion();
 	static void SetRegistryConfigurationVersionToCurrent();
+#if 0
 	static bool GetExtendedLoggedInTest();
 	static void SetExtendedLoggedInTest(bool do_it);
+#endif
 	static const int GetLoginInterval();
 	static void SetLoginInterval(int interval);
 	static const bool GetLoginAtInterval();
