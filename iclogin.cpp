@@ -29,7 +29,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const _TCHAR* const IC_VERSIONSTRING = _T("version 0.5.2pre");
+const _TCHAR* const IC_VERSIONSTRING = _T("version 0.6");
 const _TCHAR* const IC_APPURL = _T("http://www.lysator.liu.se/~bratell/iclogin/");
 
 

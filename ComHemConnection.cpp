@@ -116,24 +116,85 @@ bool CComHemConnection::Is_loggined() const
 {
 	CICInternetSession internet_session(m_parent_window);
 	bool return_value = false;
+	CString page;
 	try {
-		CString page;
-		GetUrl(internet_session, CConfiguration::GetLoginHost(), 
-			"/serviceSelection.php3", page);
-		page.MakeLower();
-		int kstart = FindSubString(page, "kabel-tv internet");
-		if(kstart>0 && FindSubString(page, "aktiv", kstart) != -1)
+		
+		if(m_login_method == LOGIN_METHOD_UNKNOWN)
 		{
-			g_log.Log("Finding keywords.", CLog::LOG_DUMP);
-			return_value = true;
+			DetectLoginMethod(internet_session);
 		}
-		else
+
+		if(m_login_method == LOGIN_METHOD_OLD)
 		{
-			g_log.Log("Missing keyword.", CLog::LOG_DUMP);
+			GetUrl(internet_session, CConfiguration::GetLoginHost(), 
+				"/serviceSelection.php3", page);
+			page.MakeLower();
+			int kstart = FindSubString(page, "kabel-tv internet");
+			if(kstart>0 && FindSubString(page, "aktiv", kstart) != -1)
+			{
+				g_log.Log("Finding keywords.", CLog::LOG_DUMP);
+				return_value = true;
+			}
+			else
+			{
+				g_log.Log("Missing keyword.", CLog::LOG_DUMP);
+			}
+		}
+		else if(m_login_method == LOGIN_METHOD_NEW)
+		{
+			GetUrl(internet_session, CConfiguration::GetLoginHost(), 
+				"/sd/init", page);
+			page.MakeLower();
+			int kstart = FindSubString(page, "pwdenter");
+			if(kstart != -1)
+			{
+				g_log.Log("Finding 'pwdenter'. Not logged in.", 
+					CLog::LOG_DUMP);
+				return_value = false;
+			}
+			else
+			{
+				g_log.Log("No 'pwdenter'. Logged in.", CLog::LOG_DUMP);
+				return_value = true;
+			}
+		}
+		else if(m_login_method == LOGIN_METHOD_UNKNOWN)
+		{
+			return false;
 		}
 	} catch (CInternetException *cie) {cie->Delete(); } 
 
 	return return_value;
+}
+
+void CComHemConnection::DetectLoginMethod(
+			CInternetSession &internet_session) const
+{
+	// Detect login method
+	g_log.Log("Trying to detect login method.");
+	CString page;
+	try {
+		GetUrl(internet_session, CConfiguration::GetLoginHost(),
+			"/", page);
+		page.MakeLower();
+		if(FindSubString(page, "login.php3") != -1)
+		{
+			m_login_method = LOGIN_METHOD_OLD;
+			g_log.Log("Detecting 'old' login method.");
+		}
+		else if(FindSubString(page, "sd/") != -1)
+		{
+			m_login_method = LOGIN_METHOD_NEW;
+			g_log.Log("Detecting 'new' login method.");
+		}
+		else
+		{
+			g_log.Log("Couldn't detect login method.");
+		}
+	} catch (CInternetException *cie) {
+		g_log.Log("Couldn't detect login method - failed to contact login server.");
+		cie->Delete();
+	} 
 }
 
 
@@ -151,30 +212,9 @@ bool CComHemConnection::Login() const
 
 	CICInternetSession internet_session(m_parent_window);
 	CString page;
+
 	// Detect login method
-	if(m_login_method == LOGIN_METHOD_UNKNOWN)
-	{
-		g_log.Log("Trying to detect login method.");
-		try {
-			GetUrl(internet_session, CConfiguration::GetLoginHost(),
-				"/", page);
-			page.MakeLower();
-			if(FindSubString(page, "login.php3") != -1)
-			{
-				m_login_method = LOGIN_METHOD_OLD;
-				g_log.Log("Detecting 'old' login method.");
-			}
-			else if(FindSubString(page, "sd/") != -1)
-			{
-				m_login_method = LOGIN_METHOD_NEW;
-				g_log.Log("Detecting 'new' login method.");
-			}
-		} catch (CInternetException *cie) {
-			m_parent_window->PostMessage(IC_LOGINFAILED);
-			cie->Delete();
-			return false;
-		} 
-	}
+	DetectLoginMethod(internet_session);
 
 	// Make a copy to avoid race conditions.
 	int our_login_method = m_login_method; 

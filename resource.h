@@ -1,18 +1,3 @@
-/**
- * This file is a part of IC Login (c) Daniel Bratell 2000
- *
- * That the source code is publicized on Internet does not mean that
- * it's free to use. You are allowed to be inspired by it, but if you
- * do patches of your own you must submit them to the original author.
- *
- * Also, you mustn't redistribute the source code. If you want to
- * make other people see it, point them to 
- * 
- * http://www.lysator.liu.se/~bratell/iclogin/
- *
- * Original Author: Daniel Bratell <bratell@lysator.liu.se>
- */
-
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
 // Used by iclogin.rc
@@ -67,11 +52,8 @@
 #define IDI_TRAYMINUS                   140
 #define IDS_CLEANREGISTRYBUTTON         140
 #define IDS_CLEANREGISTRYINFORMATION    141
-#define IDI_ICON1                       141
 #define IDS_NOUSERORPASSWORD            142
-#define IDI_ICON2                       142
 #define IDS_USERNAMEFIELDTOOLTIP        143
-#define IDI_ICON3                       143
 #define IDS_PASSWORDFIELDTOOLTIP        144
 #define IDS_HIDEPASSWORDTOOLTIP         145
 #define IDS_LOGINATSTARTUPCHECKBOXTOOLTIP 146

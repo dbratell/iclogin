@@ -55,6 +55,7 @@ private:
 	static bool	LoginNewWay(CInternetSession &internet_session);
 	static void LogInternetError(const CInternetSession &internet_session,
 		const CString& operation, CInternetException *ie);
+	void DetectLoginMethod(CInternetSession &internet_session) const;
 
 	static int FindSubString(const CString &str, const CString &substr, int start=0);
 

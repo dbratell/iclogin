@@ -27,6 +27,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define SCROLLWIDTH 30
+#define SCROLLINTERVAL 130
 
 /////////////////////////////////////////////////////////////////////////////
 // CAboutDialog dialog
@@ -78,7 +79,7 @@ BOOL CAboutDialog::OnInitDialog()
 		// TODO: Add extra initialization here
 	
 	SetScrollText();
-	SetTimer(SCROLLTIMER, 100, NULL);
+	SetTimer(SCROLLTIMER, SCROLLINTERVAL, NULL);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
