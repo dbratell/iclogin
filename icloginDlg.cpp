@@ -16,6 +16,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+
+#define ROTATEICONINTERVAL 500
+
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginDlg dialog
 
@@ -26,7 +29,8 @@ CIcloginDlg::CIcloginDlg(CWnd* pParent /*=NULL*/,
 	m_logintimer(0), m_loggedintimespan(0), m_loggedouttimespan(0), 
 	m_failedlastlogin(false), m_currentstatus(0),
 	m_expectedstatus(0), m_everlogin(false), m_everlogout(false),
-	m_oktoclose(false), m_trayicon(NULL)
+	m_oktoclose(false), m_trayicon(NULL), m_thread_counter(0), 
+	m_icon_rotation_state(0)
 {
 	//{{AFX_DATA_INIT(CIcloginDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -74,6 +78,10 @@ BEGIN_MESSAGE_MAP(CIcloginDlg, CDialog)
 	ON_MESSAGE(IC_LOGOUTSTARTED, OnLogoutStarted)
 	ON_MESSAGE(IC_LOGOUTFAILED, OnLogoutFailed)
 	ON_MESSAGE(IC_LOGOUTSUCCEEDED, OnLogoutSucceeded)
+	ON_MESSAGE(IC_LOGINTHREADSTARTED, OnLoginThreadStarted)
+	ON_MESSAGE(IC_LOGINTHREADTERMINATED, OnLoginThreadTerminated)
+	ON_MESSAGE(IC_LOGOUTTHREADSTARTED, OnLogoutThreadStarted)
+	ON_MESSAGE(IC_LOGOUTTHREADTERMINATED, OnLogoutThreadTerminated)
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
 	ON_MESSAGE(IC_RESOLVINGNAME, OnResolvingName)
@@ -114,6 +122,8 @@ BOOL CIcloginDlg::OnInitDialog()
 	EnableToolTips(true);
 	
 	SetLoginStatus(0);
+
+	LoadIcons();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -227,6 +237,20 @@ LRESULT CIcloginDlg::OnLoginFailed(WPARAM, LPARAM)
 	m_messagetext2.SetWindowText(_T(""));
 	SetLoginStatus(-1);
 	SetupLoginTimer();
+
+	if(m_running_as_service && CConfiguration::GetServicePopupError())
+	{
+		// This is not thread safe, but possible errors are not
+		// severe.
+		static int error_dialogs = 0;
+		if(error_dialogs < 1)
+		{
+			++error_dialogs;
+			AfxMessageBox(IDS_SERVICELOGINFAILURE);
+			--error_dialogs;
+		}
+	}
+
 	return 0;
 }
 
@@ -264,6 +288,48 @@ LRESULT CIcloginDlg::OnLogoutSucceeded(WPARAM, LPARAM)
 	SetLoginStatus(-1);
 	return 0;
 }
+
+LRESULT CIcloginDlg::OnLoginThreadStarted(WPARAM, LPARAM)
+{
+	CSingleLock lock(&m_thread_counter_mutex, true);
+	++m_thread_counter;
+	if(m_thread_counter == 1)
+	{
+		// First thread
+		m_icon_rotation_state = 1;
+		SetTimer(ROTATEICONTIMER, ROTATEICONINTERVAL, NULL);
+	}
+	return 0;
+}
+
+LRESULT CIcloginDlg::OnLoginThreadTerminated(WPARAM, LPARAM)
+{
+	CSingleLock lock(&m_thread_counter_mutex, true);
+	--m_thread_counter;
+	return 0;
+}
+
+LRESULT CIcloginDlg::OnLogoutThreadStarted(WPARAM, LPARAM)
+{
+	CSingleLock lock(&m_thread_counter_mutex, true);
+	++m_thread_counter;
+	if(m_thread_counter == 1)
+	{
+		// First thread
+		m_icon_rotation_state = 1;
+		SetTimer(ROTATEICONTIMER, ROTATEICONINTERVAL, NULL);
+	}
+	return 0;
+}
+
+LRESULT CIcloginDlg::OnLogoutThreadTerminated(WPARAM, LPARAM)
+{
+	CSingleLock lock(&m_thread_counter_mutex, true);
+	--m_thread_counter;
+	return 0;
+}
+
+
 
 void CIcloginDlg::DisplayMessage(UINT message_id)
 {
@@ -316,6 +382,9 @@ void CIcloginDlg::OnTimer(UINT nIDEvent)
 		break;
 	case UPDATETIMER:
 		UpdateTimers();
+		break;
+	case ROTATEICONTIMER:
+		RotateIcons();
 		break;
 	default:
 		CDialog::OnTimer(nIDEvent);
@@ -504,13 +573,11 @@ void CIcloginDlg::OnSize(UINT nType, int cx, int cy)
  */
 void CIcloginDlg::SetLoginStatus(int status)
 {
-	HICON icon = NULL;
 	CString tooltip;
 
 	switch(status)
 	{
 	case -1: // Not logged in
-		icon = AfxGetApp()->LoadIcon(IDI_SAD);
 		m_everlogout = true;
 		m_lastlogouttime = CTime::GetCurrentTime();
 		if(m_trayicon)
@@ -519,10 +586,8 @@ void CIcloginDlg::SetLoginStatus(int status)
 		}
 		break;
 	case 0: // Unknown
-		icon = AfxGetApp()->LoadIcon(IDI_QUESTIONICON);
 		break;
 	case 1: // Logged in
-		icon = AfxGetApp()->LoadIcon(IDI_HAPPY);
 		m_everlogin = true;
 		m_lastlogintime = CTime::GetCurrentTime();
 		if(m_trayicon)
@@ -533,11 +598,12 @@ void CIcloginDlg::SetLoginStatus(int status)
 	default:
 		ASSERT(false);
 	}
-	m_statusicon.SetIcon(icon);
 
 	UpdateTimers(); // before updating status
 
 	m_currentstatus = status;
+
+	RotateIcons();
 
 	// Display new IP-number
 	SetDialogTitle();
@@ -714,6 +780,54 @@ void CIcloginDlg::OnOK()
 	DestroyWindow();
 	::PostQuitMessage(0);
 }
+
+void CIcloginDlg::LoadIcons()
+{
+	CWinApp *app = AfxGetApp();
+	m_happy_icon[0] = app->LoadIcon(IDI_HAPPY1);
+	m_happy_icon[1] = app->LoadIcon(IDI_HAPPY2);
+	m_happy_icon[2] = app->LoadIcon(IDI_HAPPY3);
+	m_happy_icon[3] = app->LoadIcon(IDI_HAPPY4);
+	m_question_icon[0] = app->LoadIcon(IDI_QUESTION1);
+	m_question_icon[1] = app->LoadIcon(IDI_QUESTION2);
+	m_question_icon[2] = app->LoadIcon(IDI_QUESTION3);
+	m_question_icon[3] = app->LoadIcon(IDI_QUESTION4);
+	m_sad_icon[0] = app->LoadIcon(IDI_SAD1);
+	m_sad_icon[1] = app->LoadIcon(IDI_SAD2);
+	m_sad_icon[2] = app->LoadIcon(IDI_SAD3);
+	m_sad_icon[3] = app->LoadIcon(IDI_SAD4);
+}
+
+void CIcloginDlg::RotateIcons() 
+{
+	CSingleLock lock(&m_thread_counter_mutex, true);
+	if(m_thread_counter == 0)
+	{
+		KillTimer(ROTATEICONTIMER);
+		m_icon_rotation_state = 0;
+	}
+
+	HICON icon = NULL;
+	switch(m_currentstatus)
+	{
+	case -1: // Not logged in
+		icon = m_sad_icon[m_icon_rotation_state];
+		break;
+	case 0: // Unknown
+		icon = m_question_icon[m_icon_rotation_state];
+		break;
+	case 1: // Logged in
+		icon = m_happy_icon[m_icon_rotation_state];
+		break;
+	default:
+		ASSERT(false);
+	}
+
+	m_statusicon.SetIcon(icon);
+
+	m_icon_rotation_state = (m_icon_rotation_state+1)%4;
+}
+
 
 
 CString CIcloginDlg::GetLocalIpNumber()

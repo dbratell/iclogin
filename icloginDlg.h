@@ -12,6 +12,7 @@
 
 #define LOGINTIMER 1284
 #define UPDATETIMER 1433
+#define ROTATEICONTIMER 1543
 
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginDlg dialog
@@ -65,6 +66,10 @@ protected:
 	afx_msg LRESULT OnLogoutStarted(WPARAM, LPARAM);
 	afx_msg LRESULT OnLogoutFailed(WPARAM, LPARAM);
 	afx_msg LRESULT OnLogoutSucceeded(WPARAM, LPARAM);
+	afx_msg LRESULT OnLoginThreadStarted(WPARAM, LPARAM);
+	afx_msg LRESULT OnLoginThreadTerminated(WPARAM, LPARAM);
+	afx_msg LRESULT OnLogoutThreadStarted(WPARAM, LPARAM);
+	afx_msg LRESULT OnLogoutThreadTerminated(WPARAM, LPARAM);
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnDestroy();
 	afx_msg LRESULT OnResolvingName(WPARAM wparam, LPARAM);
@@ -95,6 +100,8 @@ private:
 	void SetupLocalizedText();
 	CString GetLocalIpNumber();
 	void SetDialogTitle();
+	void RotateIcons();
+	void LoadIcons();
 
 // Attributes
 	UINT m_logintimer;
@@ -111,6 +118,13 @@ private:
 
 	CTrayIcon *m_trayicon;
 	bool m_oktoclose; // true when it's ok for the user to close the whole app
+
+	int m_thread_counter;
+	CMutex m_thread_counter_mutex;
+	int m_icon_rotation_state;
+	HICON m_happy_icon[4];
+	HICON m_question_icon[4];
+	HICON m_sad_icon[4];
 };
 
 //{{AFX_INSERT_LOCATION}}

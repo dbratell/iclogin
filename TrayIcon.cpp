@@ -91,17 +91,12 @@ LRESULT CTrayIcon::HandleMessage(WPARAM, LPARAM lparam)
 		{
 			m_wnd->SetForegroundWindow();
 		}
-
-		TRACE("(left)Doubleclick\n");
 		break;
 	case WM_LBUTTONDOWN:
-		TRACE("(left)Klicka på du bara...");
 		break;
 	case WM_LBUTTONUP:
-		TRACE("upp(left)\n");
 		break;
 	case WM_RBUTTONUP:
-		TRACE("upp(right)\n");
 		break;
 	case WM_RBUTTONDOWN:
 	case WM_CONTEXTMENU:
@@ -142,7 +137,7 @@ void CTrayIcon::ModifyIcon() const
 	nid.uID = TRAYICONID;
 	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
 	nid.uCallbackMessage = IC_TRAYICON;
-	nid.hIcon = m_hcurrenticon; // XXX New icon
+	nid.hIcon = m_hcurrenticon; 
 	strcpy(nid.szTip, m_tooltip);
 	Shell_NotifyIcon_Proxy(NIM_MODIFY, &nid);
 

@@ -246,6 +246,18 @@ SOURCE=.\res\happy.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\happy1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\happy3.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\happy4.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\iclogin.ico
 # End Source File
 # Begin Source File
@@ -254,11 +266,31 @@ SOURCE=.\res\iclogin.rc2
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\ico00001.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ico00002.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\icon1.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\icon4.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\LProgikon.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\questio1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\questio4.ico
 # End Source File
 # Begin Source File
 
@@ -267,6 +299,22 @@ SOURCE=.\res\question.ico
 # Begin Source File
 
 SOURCE=.\res\sad.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\sad1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\sad2.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\sad3.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\sad4.ico
 # End Source File
 # Begin Source File
 

@@ -109,17 +109,18 @@ bool CComHemConnection::Is_loggined() const
 		int kstart = page.Find("kabel-tv internet");
 		if(kstart>0 && page.Find("aktiv", kstart) != -1)
 		{
-			g_log.Log("Finding word \"kabel-tv internet\" and \"aktiv\".", CLog::LOG_DUMP);
+			g_log.Log("Finding keywords.", CLog::LOG_DUMP);
 			return_value = true;
 		}
 		else
 		{
-			g_log.Log("Not finding word \"kabel-tv internet\" and \"aktiv\".", CLog::LOG_DUMP);
+			g_log.Log("Missing keyword.", CLog::LOG_DUMP);
 		}
 	} catch (CInternetException *cie) {cie->Delete(); } 
 
 	return return_value;
 }
+
 
 bool CComHemConnection::Login() const
 {

@@ -52,7 +52,8 @@ BOOL CIcloginApp::InitInstance()
 {
 	if(CInstanceChecker::AlreadyRunning())
 	{
-//		AfxMessageBox(_T("Previous version detected, will now restore it"), MB_OK);
+		// Can't log this since the other instance holds
+		// on to the log file.
 		CInstanceChecker::ActivateOtherInstance();
 		return FALSE;
 	} 
@@ -64,7 +65,7 @@ BOOL CIcloginApp::InitInstance()
 	}
 
 	g_log.Log("IC Login started");
-
+	
 
 #ifdef ICLOGIN_SERVICE
 	if(IsWindowsNT())

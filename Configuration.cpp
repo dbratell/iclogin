@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "iclogin.h"
 #include "Configuration.h"
+#include "ServiceMaster.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -31,6 +32,8 @@ const _TCHAR* const LOGLEVELKEY = _T("LogLevel");
 const _TCHAR* const SERVICENAMEKEY = _T("ServiceName");
 const _TCHAR* const SERVICEDISPLAYNAMEKEY = _T("ServiceDisplayName");
 const _TCHAR* const VISIBLEASSERVICE = _T("VisibleAsService");
+const _TCHAR* const RUNASSERVICE = _T("RunAsService");
+const _TCHAR* const SERVICEPOPUPERROR = _T("ServicePopupError");
 #endif
 
 const _TCHAR* const PROGRAMNAMEINRUN = _T("IC Login");
@@ -309,6 +312,45 @@ void CConfiguration::SetVisibleAsService(const bool be_it)
 		SetIntData(VISIBLEASSERVICE, 1);
 	else
 		SetIntData(VISIBLEASSERVICE, 0);
+}
+
+
+const bool CConfiguration::GetServicePopupError()
+{
+	return (GetIntData(SERVICEPOPUPERROR, 0) != 0);
+}
+
+
+void CConfiguration::SetServicePopupError(const bool be_it)
+{
+	if(be_it)
+		SetIntData(SERVICEPOPUPERROR, 1);
+	else
+		SetIntData(SERVICEPOPUPERROR, 0);
+}
+
+
+const bool CConfiguration::GetRunAsService()
+{
+	return (GetIntData(RUNASSERVICE, 0) != 0);
+}
+
+
+void CConfiguration::SetRunAsService(const bool do_it)
+{
+	if(do_it)
+	{
+		CServiceMaster::RemoveService();
+		if(CServiceMaster::InstallService())
+		{
+			SetIntData(RUNASSERVICE, 1);
+		}
+	}
+	else
+	{
+		CServiceMaster::RemoveService();
+		SetIntData(RUNASSERVICE, 0);
+	}
 }
 
 

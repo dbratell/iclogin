@@ -49,6 +49,10 @@ public:
 	static void SetServiceLongName(const CString &name);
 	static const bool GetVisibleAsService();
 	static void SetVisibleAsService(bool be_it);
+	static const bool GetRunAsService();
+	static void SetRunAsService(bool do_it);
+	static const bool GetServicePopupError();
+	static void SetServicePopupError(bool do_it);
 #endif
 
 	static void CleanRegistry();

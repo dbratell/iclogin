@@ -21,7 +21,6 @@ CConfigurationDialog::CConfigurationDialog(CWnd* pParent /*=NULL*/)
 	: CDialog(CConfigurationDialog::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CConfigurationDialog)
-		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 }
 
@@ -30,8 +29,10 @@ void CConfigurationDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CConfigurationDialog)
+	DDX_Control(pDX, IDC_STARTUPMETHOD, m_startupmethod);
+	DDX_Control(pDX, IDC_SERVICEPOPUPERRORS, m_servicepopuperror);
+	DDX_Control(pDX, IDC_NOAUTOSTART, m_noautostart);
 	DDX_Control(pDX, IDC_LOGTOFILE, m_logtofile);
-	DDX_Control(pDX, IDC_AUTOSTART, m_autostart);
 	DDX_Control(pDX, IDC_CLEANREGISTRYBUTTON, m_cleanregistrybutton);
 	DDX_Control(pDX, IDC_STARTHIDDEN, m_starthidden);
 	DDX_Control(pDX, IDC_LOGINATINTERVALUNIT, m_loginatintervalunit);
@@ -52,6 +53,9 @@ BEGIN_MESSAGE_MAP(CConfigurationDialog, CDialog)
 	ON_BN_CLICKED(IDC_HIDEPASSWORD, OnHidepassword)
 	ON_EN_KILLFOCUS(IDC_LOGININTERVALFIELD, OnKillfocusLoginintervalfield)
 	ON_BN_CLICKED(IDC_CLEANREGISTRYBUTTON, OnCleanregistrybutton)
+	ON_BN_CLICKED(IDC_RUNASSERVICE, OnStartupMethod)
+	ON_BN_CLICKED(IDC_NOAUTOSTART, OnStartupMethod)
+	ON_BN_CLICKED(IDC_STARTONLOGIN, OnStartupMethod)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXT, 0, 0xFFFF, OnToolTipNotify)
 END_MESSAGE_MAP()
@@ -132,17 +136,6 @@ BOOL CConfigurationDialog::OnInitDialog()
 		m_starthidden.SetCheck(false);
 	}
 
-	data.LoadString(IDS_AUTOSTART);
-	m_autostart.SetWindowText(data);
-	if(CConfiguration::GetAutoStart())
-	{
-		m_autostart.SetCheck(true);
-	}
-	else
-	{
-		m_autostart.SetCheck(false);
-	}
-
 	data.LoadString(IDS_LOGTOFILE);
 	m_logtofile.SetWindowText(data);
 	if(CConfiguration::GetLogToFile())
@@ -157,6 +150,56 @@ BOOL CConfigurationDialog::OnInitDialog()
 
 	data.LoadString(IDS_CLEANREGISTRYBUTTON);
 	m_cleanregistrybutton.SetWindowText(data);
+
+	data.LoadString(IDS_STARTUPMETHOD);
+	m_startupmethod.SetWindowText(data);
+
+	CWnd *radiobutton1, *radiobutton2, *radiobutton3;
+	radiobutton1 = GetDlgItem(IDC_NOAUTOSTART);
+	data.LoadString(IDS_NOAUTOSTART);
+	radiobutton1->SetWindowText(data);
+
+	radiobutton2 = GetDlgItem(IDC_STARTONLOGIN);
+	data.LoadString(IDS_STARTONLOGIN);
+	radiobutton2->SetWindowText(data);
+
+	radiobutton3 = GetDlgItem(IDC_RUNASSERVICE);
+	data.LoadString(IDS_RUNASSERVICE);
+	radiobutton3->SetWindowText(data);
+
+	if(!CConfiguration::GetAutoStart() && !CConfiguration::GetRunAsService())
+	{
+		CheckRadioButton(IDC_NOAUTOSTART, IDC_RUNASSERVICE, IDC_NOAUTOSTART);
+		m_servicepopuperror.EnableWindow(false);
+	}
+	else if(CConfiguration::GetAutoStart())
+	{
+		// If it's a conflict, we drop the service part intentionally.
+		CheckRadioButton(IDC_NOAUTOSTART, IDC_RUNASSERVICE, IDC_STARTONLOGIN);
+		m_servicepopuperror.EnableWindow(false);
+	}
+	else // Service 
+	{
+		CheckRadioButton(IDC_NOAUTOSTART, IDC_RUNASSERVICE, IDC_RUNASSERVICE);
+	}
+
+	if(!IsWindowsNT())
+	{
+		radiobutton3->EnableWindow(false);
+		m_servicepopuperror.EnableWindow(false);
+	}
+
+	data.LoadString(IDS_SERVICEPOPUPERROR);
+	m_servicepopuperror.SetWindowText(data);
+	if(CConfiguration::GetServicePopupError())
+	{
+		m_servicepopuperror.SetCheck(true);
+	}
+	else
+	{
+		m_servicepopuperror.SetCheck(false);
+	}
+
 
 	EnableToolTips(true);
 	
@@ -226,8 +269,6 @@ void CConfigurationDialog::OnOK()
 
 	CConfiguration::SetStartHidden(m_starthidden.GetCheck() != 0);
 
-	CConfiguration::SetAutoStart(m_autostart.GetCheck() != 0);
-
 	if(m_logtofile.GetCheck() != 0 && !CConfiguration::GetLogToFile())
 	{
 		g_log.SetLogFile(CConfiguration::GetLogFile());
@@ -245,6 +286,28 @@ void CConfigurationDialog::OnOK()
 	CConfiguration::SetUsername(username);
 
 	CConfiguration::SetPassword(password);
+
+	switch(GetCheckedRadioButton(IDC_NOAUTOSTART, IDC_RUNASSERVICE))
+	{
+	case 0:
+		// Nothing selected
+	case IDC_NOAUTOSTART:
+		CConfiguration::SetAutoStart(false);
+		CConfiguration::SetRunAsService(false);
+		break;
+	case IDC_STARTONLOGIN:
+		CConfiguration::SetAutoStart(true);
+		CConfiguration::SetRunAsService(false);
+		break;
+	case IDC_RUNASSERVICE:
+		ASSERT(IsWindowsNT());
+		CConfiguration::SetAutoStart(false);
+		CConfiguration::SetRunAsService(true);
+		CConfiguration::SetServicePopupError(m_servicepopuperror.GetCheck() != 0);
+		break;
+	default:
+		ASSERT(false);
+	}
 
 	CDialog::OnOK();
 }
@@ -338,9 +401,6 @@ BOOL CConfigurationDialog::OnToolTipNotify(UINT, NMHDR *pNMHDR, LRESULT *pResult
    case IDC_STARTHIDDEN:
 	   pTTT->lpszText = (LPTSTR)IDS_STARTHIDDENTOOLTIP;
 	   break;
-   case IDC_AUTOSTART:
-	   pTTT->lpszText = (LPTSTR)IDS_AUTOSTARTTOOLTIP;
-	   break;
    case IDC_CLEANREGISTRYBUTTON:
 	   pTTT->lpszText = (LPTSTR)IDS_CLEANREGISTRYBUTTONTOOLTIP;
 	   break;
@@ -359,6 +419,19 @@ BOOL CConfigurationDialog::OnToolTipNotify(UINT, NMHDR *pNMHDR, LRESULT *pResult
 		   strcpy(pTTT->lpszText, tooltip); // Less than 80 chars
 	   }
 	   break;
+   case IDC_NOAUTOSTART:
+	   pTTT->lpszText = (LPTSTR)IDS_NOAUTOSTARTTOOLTIP;
+	   break;
+   case IDC_STARTONLOGIN:
+	   pTTT->lpszText = (LPTSTR)IDS_STARTONLOGONTOOLTIP;
+	   break;
+   case IDC_RUNASSERVICE:
+	   pTTT->lpszText = (LPTSTR)IDS_RUNASSERVICETOOLTIP;
+	   break;
+   case IDC_SERVICEPOPUPERRORS:
+	   pTTT->lpszText = (LPTSTR)IDS_SERVICEPOPUPERRORSTOOLTIP;
+	   break;
+
    default: // No tooltip
 	   TRACE1("Why are there no tooltip for control %d?\n", nID);
    }
@@ -366,4 +439,24 @@ BOOL CConfigurationDialog::OnToolTipNotify(UINT, NMHDR *pNMHDR, LRESULT *pResult
    *pResult = 0;
 
    return TRUE;    // message was handled
+}
+
+void CConfigurationDialog::OnStartupMethod() 
+{
+	switch(GetCheckedRadioButton(IDC_NOAUTOSTART, IDC_RUNASSERVICE))
+	{
+	case 0:
+		// Nothing selected
+	case IDC_NOAUTOSTART:
+	case IDC_STARTONLOGIN:
+		m_servicepopuperror.EnableWindow(false);
+		break;
+	case IDC_RUNASSERVICE:
+		ASSERT(IsWindowsNT());
+		m_servicepopuperror.EnableWindow(true);
+		break;
+	default:
+		ASSERT(false);
+	}
+
 }
