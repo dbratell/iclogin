@@ -10,6 +10,8 @@
 #endif // _MSC_VER > 1000
 
 
+#include <iphlpapi.h>
+
 
 class CComHemConnection  
 {
@@ -20,6 +22,7 @@ public:
 	bool Login() const;
 	bool Logout() const;
 	bool Is_loggined() const;
+	bool RestartDHCP() const;
 	CWnd *CComHemConnection::GetWindow() const;
 
 private:
@@ -40,7 +43,12 @@ private:
 
 	static int FindSubString(const CString &str, const CString &substr, int start=0);
 
-
+	static DWORD IpReleaseAddress_proxy(PIP_ADAPTER_INDEX_MAP AdapterInfo);
+	static DWORD IpRenewAddress_proxy(PIP_ADAPTER_INDEX_MAP AdapterInfo);
+	static DWORD GetAdaptersInfo_proxy(PIP_ADAPTER_INFO pAdapterInfo,
+										PULONG pOutBufLen);
+	static DWORD GetInterfaceInfo_proxy(PIP_INTERFACE_INFO pIfTable,
+										PULONG dwOutBufLen);
 	// Attributes
 	CWnd *m_parent_window;
 	static int m_login_method;
@@ -49,8 +57,10 @@ private:
 
 void StartLoginThread(CWnd *parent);
 void StartLogoutThread(CWnd *parent);
+void StartRestartDHCPThread(CWnd *parent);
 UINT AFX_CDECL LoginThread( LPVOID pParam );
 UINT AFX_CDECL LogoutThread( LPVOID pParam );
+UINT AFX_CDECL RestartDHCPThread( LPVOID pParam );
 
 
 #endif // !defined(AFX_COMHEMCONNECTION_H__CACAA417_389C_4D7F_980B_0234C659200F__INCLUDED_)

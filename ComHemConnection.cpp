@@ -208,6 +208,119 @@ bool CComHemConnection::Login() const
 	return true;
 }
 
+bool CComHemConnection::RestartDHCP() const
+{
+	m_parent_window->PostMessage(IC_RESTARTDHCPSTARTED);
+	g_log.Log("Beginning restart of DHCP...");
+	DWORD ai_buffer_size = 0;
+	DWORD ii_buffer_size = 0;
+
+	if(GetAdaptersInfo_proxy(NULL, &ai_buffer_size)!=ERROR_BUFFER_OVERFLOW)
+	{
+		g_log.Log("Failed GetAdaptersInfo (too old OS?)...");
+		return false;
+	}
+
+	PIP_ADAPTER_INFO ai = (PIP_ADAPTER_INFO)new char[ai_buffer_size];
+	if(!ai)
+	{
+		g_log.Log("Out of memory!");
+		return false;
+	}
+
+	if(GetAdaptersInfo_proxy(ai, &ai_buffer_size) != ERROR_SUCCESS)
+	{
+		g_log.Log("Failed GetAdaptersInfo...");
+		delete ai;
+		return false;
+	}
+
+	if(GetInterfaceInfo_proxy(NULL, &ii_buffer_size) != ERROR_INSUFFICIENT_BUFFER)
+	{
+		g_log.Log("Failed GetInterfaceInfo...");
+		delete ai;
+		return false;
+	}
+
+	PIP_INTERFACE_INFO ii = (PIP_INTERFACE_INFO)new char[ii_buffer_size];
+	if(!ii)
+	{
+		g_log.Log("Out of memory!");
+		delete ai;
+		return false;
+	}
+
+	if(GetInterfaceInfo_proxy(ii, &ii_buffer_size) != ERROR_SUCCESS)
+	{
+		g_log.Log("Failed GetInterfaceInfo (2)...");
+		delete ai;
+		delete ii;
+		return false;
+	}
+
+	PIP_ADAPTER_INFO current_adapter = ai;
+
+	bool return_value = true;
+
+	// Do it with all DHCP connections
+	while(current_adapter)
+	{
+		if(!current_adapter->DhcpEnabled)
+		{
+			current_adapter = current_adapter->Next;
+			continue;
+		}
+
+		// Get the INTERFACE_MAP that the functions want.
+		PIP_ADAPTER_INDEX_MAP aim = NULL;
+		for(int i = 0; i < ii->NumAdapters; i++)
+		{
+			if(ii->Adapter[i].Index == ai->Index)
+			{
+				aim = &(ii->Adapter[i]);
+				break;
+			}
+		}
+
+		if(!aim)
+		{
+			g_log.Log("Didn't find adapter in map.");
+			m_parent_window->PostMessage(IC_RESTARTDHCPFAILED);
+			current_adapter = current_adapter->Next;
+			return_value = false;
+			continue;
+		}
+
+		if(IpReleaseAddress_proxy(aim) != NO_ERROR)
+		{
+			g_log.Log("Failed DHCP release...");
+			m_parent_window->PostMessage(IC_RESTARTDHCPFAILED);
+			current_adapter = current_adapter->Next;
+			return_value = false;
+			continue;
+		}
+
+		if(IpRenewAddress_proxy(aim) != NO_ERROR)
+		{
+			// This is bad. Right now, there are no network at all.
+			g_log.Log("Failed DHCP renew...");
+			m_parent_window->PostMessage(IC_RESTARTDHCPFAILED);
+			current_adapter = current_adapter->Next;
+			return_value = false;
+			continue;
+		}
+
+		m_parent_window->PostMessage(IC_RESTARTDHCPSUCCEEDED);
+		current_adapter = current_adapter->Next;
+		return_value = true;
+	}
+
+	delete ai;
+	delete ii;
+	return return_value;
+}
+
+
 bool CComHemConnection::LoginOldWay(CInternetSession &internet_session)
 {
 	g_log.Log("Loggin in with old method.");
@@ -596,6 +709,12 @@ void StartLogoutThread(CWnd *parent)
 	AfxBeginThread(LogoutThread, conn);
 }
 
+void StartRestartDHCPThread(CWnd *parent)
+{
+	CComHemConnection *conn = new CComHemConnection(parent);
+	AfxBeginThread(RestartDHCPThread, conn);
+}
+
 
 UINT AFX_CDECL LoginThread( LPVOID pParam )
 {
@@ -627,6 +746,21 @@ UINT AFX_CDECL LogoutThread( LPVOID pParam )
 }
 
 
+UINT AFX_CDECL RestartDHCPThread( LPVOID pParam )
+{
+	// Take ownership of the input
+	auto_ptr<CComHemConnection> 
+		conn(reinterpret_cast<CComHemConnection *>(pParam));
+
+	conn->GetWindow()->PostMessage(IC_RESTARTDHCPTHREADSTARTED);
+
+	conn->RestartDHCP();
+
+	conn->GetWindow()->PostMessage(IC_RESTARTDHCPTHREADTERMINATED);
+	return 0;
+}
+
+
 CString CComHemConnection::URLEncode(const CString original)
 {
 	int length = original.GetLength();
@@ -647,4 +781,104 @@ CString CComHemConnection::URLEncode(const CString original)
 	}
 
 	return encoded_string;
+}
+
+typedef DWORD (__stdcall *IpReleaseAddress_Func)(PIP_ADAPTER_INDEX_MAP AdapterInfo);
+
+DWORD CComHemConnection::IpReleaseAddress_proxy(PIP_ADAPTER_INDEX_MAP AdapterInfo)
+{
+	HINSTANCE iphlpapidll = LoadLibrary(_T("iphlpapi.dll"));
+	if(!iphlpapidll)
+	{
+		return ERROR_NOT_SUPPORTED;
+	}
+	IpReleaseAddress_Func func;
+	func = (IpReleaseAddress_Func)GetProcAddress(iphlpapidll, "IpReleaseAddress");
+	DWORD return_value = ERROR_NOT_SUPPORTED;
+	if(func)
+	{
+		return_value = func(AdapterInfo);
+	}
+
+	FreeLibrary(iphlpapidll);
+
+	return return_value;
+}
+
+typedef DWORD (__stdcall *IpRenewAddress_Func)(PIP_ADAPTER_INDEX_MAP AdapterInfo);
+
+DWORD CComHemConnection::IpRenewAddress_proxy(PIP_ADAPTER_INDEX_MAP AdapterInfo)
+{
+	HINSTANCE iphlpapidll = LoadLibrary(_T("iphlpapi.dll"));
+	if(!iphlpapidll)
+	{
+		return ERROR_NOT_SUPPORTED;
+	}
+	IpRenewAddress_Func func;
+	func = (IpRenewAddress_Func)GetProcAddress(iphlpapidll, "IpRenewAddress");
+	DWORD return_value = ERROR_NOT_SUPPORTED;
+	if(func)
+	{
+		return_value = func(AdapterInfo);
+	}
+
+	FreeLibrary(iphlpapidll);
+
+	return return_value;
+}
+
+typedef DWORD (__stdcall *GetAdaptersInfo_Func)(
+			PIP_ADAPTER_INFO pAdapterInfo,    // buffer to receive data
+			PULONG pOutBufLen                 // size of data returned
+);
+
+DWORD CComHemConnection::GetAdaptersInfo_proxy(
+  PIP_ADAPTER_INFO pAdapterInfo,    // buffer to receive data
+  PULONG pOutBufLen                 // size of data returned
+)
+{
+	HINSTANCE iphlpapidll = LoadLibrary(_T("iphlpapi.dll"));
+	if(!iphlpapidll)
+	{
+		return ERROR_NOT_SUPPORTED;
+	}
+	GetAdaptersInfo_Func func;
+	func = (GetAdaptersInfo_Func)GetProcAddress(iphlpapidll, "GetAdaptersInfo");
+	DWORD return_value = ERROR_NOT_SUPPORTED;
+	if(func)
+	{
+		return_value = func(pAdapterInfo, pOutBufLen);
+	}
+
+	FreeLibrary(iphlpapidll);
+
+	return return_value;
+}
+
+typedef DWORD (__stdcall *GetInterfaceInfo_Func)(
+			PIP_INTERFACE_INFO pIfTable, // buffer to receive info
+			PULONG dwOutBufLen // size of buffer 
+);
+
+DWORD CComHemConnection::GetInterfaceInfo_proxy(
+  PIP_INTERFACE_INFO pIfTable,    // buffer to receive data
+  PULONG dwOutBufLen                 // size of buffer
+)
+{
+	HINSTANCE iphlpapidll = LoadLibrary(_T("iphlpapi.dll"));
+	if(!iphlpapidll)
+	{
+		return ERROR_NOT_SUPPORTED;
+	}
+	GetInterfaceInfo_Func func;
+	func = (GetInterfaceInfo_Func)GetProcAddress(iphlpapidll, "GetInterfaceInfo");
+	DWORD return_value = ERROR_NOT_SUPPORTED;
+	if(func)
+	{
+		return_value = func(pIfTable, dwOutBufLen);
+	}
+
+	FreeLibrary(iphlpapidll);
+
+	return return_value;
 }

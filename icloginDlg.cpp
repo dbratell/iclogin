@@ -28,6 +28,7 @@ CIcloginDlg::CIcloginDlg(CWnd* pParent /*=NULL*/,
 	: CDialog(CIcloginDlg::IDD, pParent), 
 	m_running_as_service(running_as_service),
 	m_logintimer(0), m_loggedintimespan(0), m_loggedouttimespan(0), 
+	m_restartdhcptimer(0),
 	m_failedlastlogin(false), m_currentstatus(0),
 	m_expectedstatus(0), m_everlogin(false), m_everlogout(false),
 	m_oktoclose(false), m_trayicon(NULL), m_thread_counter(0), 
@@ -79,10 +80,15 @@ BEGIN_MESSAGE_MAP(CIcloginDlg, CDialog)
 	ON_MESSAGE(IC_LOGOUTSTARTED, OnLogoutStarted)
 	ON_MESSAGE(IC_LOGOUTFAILED, OnLogoutFailed)
 	ON_MESSAGE(IC_LOGOUTSUCCEEDED, OnLogoutSucceeded)
+	ON_MESSAGE(IC_RESTARTDHCPSTARTED, OnRestartDHCPStarted)
+	ON_MESSAGE(IC_RESTARTDHCPFAILED, OnRestartDHCPFailed)
+	ON_MESSAGE(IC_RESTARTDHCPSUCCEEDED, OnRestartDHCPSucceeded)
 	ON_MESSAGE(IC_LOGINTHREADSTARTED, OnLoginThreadStarted)
 	ON_MESSAGE(IC_LOGINTHREADTERMINATED, OnLoginThreadTerminated)
 	ON_MESSAGE(IC_LOGOUTTHREADSTARTED, OnLogoutThreadStarted)
 	ON_MESSAGE(IC_LOGOUTTHREADTERMINATED, OnLogoutThreadTerminated)
+	ON_MESSAGE(IC_RESTARTDHCPTHREADSTARTED, OnRestartDHCPThreadStarted)
+	ON_MESSAGE(IC_RESTARTDHCPTHREADTERMINATED, OnRestartDHCPThreadTerminated)
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
 	ON_MESSAGE(IC_RESOLVINGNAME, OnResolvingName)
@@ -100,6 +106,7 @@ BEGIN_MESSAGE_MAP(CIcloginDlg, CDialog)
 	ON_WM_SIZE()
 	ON_COMMAND(IDC_ABOUT, OnAboutDialog)
 	ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_RESTARTDHCPBUTTON, OnRestartDHCP)
 	//}}AFX_MSG_MAP
 	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTW, 0, 0xFFFF, OnToolTipNotify)
 	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTA, 0, 0xFFFF, OnToolTipNotify)
@@ -206,11 +213,18 @@ void CIcloginDlg::OnLoginbutton()
 
 void CIcloginDlg::OnLogoutbutton() 
 {
-	if(m_logintimer != 0)
+	if(m_logintimer)
 	{
 		KillTimer(m_logintimer);
 		m_logintimer = 0;
 	}
+
+	if(m_restartdhcptimer)
+	{
+		KillTimer(m_restartdhcptimer);
+		m_restartdhcptimer = 0;
+	}
+
 	StartLogoutThread(this);
 }
 
@@ -227,6 +241,11 @@ LRESULT CIcloginDlg::OnLoginSucceeded(WPARAM, LPARAM)
 	DisplayMessage(IDS_LOGINSUCCEEDED);
 	m_messagetext2.SetWindowText(_T(""));
 	SetLoginStatus(1);
+	if(m_restartdhcptimer)
+	{
+		KillTimer(m_restartdhcptimer);
+		m_restartdhcptimer = 0;
+	}
 	return 0;
 }
 
@@ -250,6 +269,19 @@ LRESULT CIcloginDlg::OnLoginFailed(WPARAM, LPARAM)
 			AfxMessageBox(IDS_SERVICELOGINFAILURE);
 			--error_dialogs;
 		}
+	}
+
+	if(!m_restartdhcptimer && CConfiguration::GetRestartDHCPWhenNeeded())
+	{
+		m_restartdhcptimer = SetTimer(RESTARTDHCPTIMER, 
+			CConfiguration::GetLogoutTimeBeforeRestartDHCP()*1000, 
+			NULL);
+#ifdef _DEBUG
+		if(m_restartdhcptimer == 0)
+		{
+			TRACE("Out of timers!\n");
+		}
+#endif
 	}
 
 	return 0;
@@ -282,7 +314,7 @@ LRESULT CIcloginDlg::OnLogoutFailed(WPARAM, LPARAM)
 
 LRESULT CIcloginDlg::OnLogoutSucceeded(WPARAM, LPARAM)
 {
-	g_log.Log("Logout succeded.");
+	g_log.Log("Logout succeeded.");
 	m_failedlastlogin = false;
 	DisplayMessage(IDS_LOGOUTSUCCEEDED);
 	m_messagetext2.SetWindowText(_T(""));
@@ -290,16 +322,38 @@ LRESULT CIcloginDlg::OnLogoutSucceeded(WPARAM, LPARAM)
 	return 0;
 }
 
+LRESULT CIcloginDlg::OnRestartDHCPStarted(WPARAM, LPARAM)
+{
+	g_log.Log("Restart of DHCP began.");
+	DisplayMessage(IDS_RESTARTDHCPSTARTED);
+	m_messagetext2.SetWindowText(_T(""));
+	return 0;
+}
+
+LRESULT CIcloginDlg::OnRestartDHCPFailed(WPARAM, LPARAM)
+{
+	g_log.Log("Restart of DHCP failed.");
+	DisplayMessage(IDS_RESTARTDHCPFAILED);
+	m_messagetext2.SetWindowText(_T(""));
+	return 0;
+}
+
+LRESULT CIcloginDlg::OnRestartDHCPSucceeded(WPARAM, LPARAM)
+{
+	g_log.Log("Restart of DHCP succeeded.");
+	DisplayMessage(IDS_RESTARTDHCPSUCCEEDED);
+	m_messagetext2.SetWindowText(_T(""));
+
+	// With DHCP restarted, let's do a login
+	OnLoginbutton();
+
+	return 0;
+}
+
+
 LRESULT CIcloginDlg::OnLoginThreadStarted(WPARAM, LPARAM)
 {
-	CSingleLock lock(&m_thread_counter_mutex, true);
-	++m_thread_counter;
-	if(m_thread_counter == 1)
-	{
-		// First thread
-		m_icon_rotation_state = 1;
-		SetTimer(ROTATEICONTIMER, ROTATEICONINTERVAL, NULL);
-	}
+	OnThreadStarted();
 	return 0;
 }
 
@@ -323,8 +377,7 @@ void CIcloginDlg::OnThreadTerminated()
 	}
 }
 
-
-LRESULT CIcloginDlg::OnLogoutThreadStarted(WPARAM, LPARAM)
+void CIcloginDlg::OnThreadStarted()
 {
 	CSingleLock lock(&m_thread_counter_mutex, true);
 	++m_thread_counter;
@@ -334,16 +387,35 @@ LRESULT CIcloginDlg::OnLogoutThreadStarted(WPARAM, LPARAM)
 		m_icon_rotation_state = 1;
 		SetTimer(ROTATEICONTIMER, ROTATEICONINTERVAL, NULL);
 	}
+}
+
+
+
+
+LRESULT CIcloginDlg::OnLogoutThreadStarted(WPARAM, LPARAM)
+{
+	OnThreadStarted();
 	return 0;
 }
 
 LRESULT CIcloginDlg::OnLogoutThreadTerminated(WPARAM, LPARAM)
 {
 	OnThreadTerminated();
-
 	return 0;
 }
 
+LRESULT CIcloginDlg::OnRestartDHCPThreadStarted(WPARAM, LPARAM)
+{
+	OnThreadStarted();
+	return 0;
+}
+
+LRESULT CIcloginDlg::OnRestartDHCPThreadTerminated(WPARAM, LPARAM)
+{
+	OnThreadTerminated();
+
+	return 0;
+}
 
 
 void CIcloginDlg::DisplayMessage(UINT message_id)
@@ -400,6 +472,11 @@ void CIcloginDlg::OnTimer(UINT nIDEvent)
 		break;
 	case ROTATEICONTIMER:
 		RotateIcons();
+		break;
+	case RESTARTDHCPTIMER:
+		KillTimer(m_restartdhcptimer);
+		m_restartdhcptimer = 0;
+		StartRestartDHCPThread(this);
 		break;
 	default:
 		CDialog::OnTimer(nIDEvent);
@@ -959,7 +1036,7 @@ void CIcloginDlg::MinimizeMemoryUsage(bool reallyminimize /* = false */)
 	HANDLE process = OpenProcess(PROCESS_SET_QUOTA, FALSE, pid);
 	if(!process)
 	{
-		int error = GetLastError();
+		return;
 	}
 
 	HINSTANCE kernel32dll = LoadLibrary(_T("kernel32.dll"));
@@ -977,11 +1054,16 @@ void CIcloginDlg::MinimizeMemoryUsage(bool reallyminimize /* = false */)
 	{
 		minsize = maxsize = -1;
 	}
-	if(process && func && !func(process, minsize, maxsize))
+	if(func)
 	{
-		int error = GetLastError();
+		func(process, minsize, maxsize);
 	}
 
 	FreeLibrary(kernel32dll);
 	CloseHandle(process);
+}
+
+void CIcloginDlg::OnRestartDHCP() 
+{
+	StartRestartDHCPThread(this);
 }

@@ -19,6 +19,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CConfigurationDialog)
 	enum { IDD = IDD_CONFIGURATION };
+	CButton	m_restartdhcp;
 	CButton	m_startupmethod;
 	CButton	m_servicepopuperror;
 	CButton	m_noautostart;

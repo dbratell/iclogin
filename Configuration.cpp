@@ -26,6 +26,8 @@ const _TCHAR* const STARTHIDDENKEY = _T("StartHidden");
 const _TCHAR* const ISCONFIGUREDKEY = _T("IsConfigured");
 const _TCHAR* const AUTOSTARTKEY = _T("AutoStart");
 const _TCHAR* const MINIMIZEMEMORYUSAGEKEY = _T("MinimizeMemoryUsage");
+const _TCHAR* const RESTARTDHCPWHENNEEDEDKEY = _T("RestartDHCPWhenNeeded");
+const _TCHAR* const LOGOUTTIMEBEFORERESTARTKEY = _T("LogoutTimeBeforeRestartDHCP");
 const _TCHAR* const LOGTOFILEKEY = _T("LogToFile");
 const _TCHAR* const LOGFILEKEY = _T("LogFile");
 const _TCHAR* const LOGLEVELKEY = _T("LogLevel");
@@ -139,11 +141,7 @@ const bool CConfiguration::GetLoginAtInterval()
 
 void CConfiguration::SetLoginAtInterval(bool do_it)
 {
-	if(do_it)
-		SetIntData(LOGINATINTERVALKEY, 1);
-	else
-		SetIntData(LOGINATINTERVALKEY, 0);
-		
+	SetIntData(LOGINATINTERVALKEY, do_it?1:0);
 }
 
 const bool CConfiguration::GetStartHidden()
@@ -154,10 +152,7 @@ const bool CConfiguration::GetStartHidden()
 
 void CConfiguration::SetStartHidden(bool do_it)
 {
-	if(do_it)
-		SetIntData(STARTHIDDENKEY, 1);
-	else
-		SetIntData(STARTHIDDENKEY, 0);
+	SetIntData(STARTHIDDENKEY, do_it?1:0);
 }
 
 const bool CConfiguration::GetIsConfigured()
@@ -168,10 +163,7 @@ const bool CConfiguration::GetIsConfigured()
 
 void CConfiguration::SetIsConfigured(bool do_it)
 {
-	if(do_it)
-		SetIntData(ISCONFIGUREDKEY, 1);
-	else
-		SetIntData(ISCONFIGUREDKEY, 0);
+	SetIntData(ISCONFIGUREDKEY, do_it?1:0);
 }
 
 
@@ -194,10 +186,7 @@ const bool CConfiguration::GetLoginAtStartup()
 
 void CConfiguration::SetLoginAtStartup(const bool do_it)
 {
-	if(do_it)
-		SetIntData(LOGINATSTARTUPKEY, 1);
-	else
-		SetIntData(LOGINATSTARTUPKEY, 0);
+	SetIntData(LOGINATSTARTUPKEY, do_it?1:0);
 }
 
 
@@ -234,10 +223,7 @@ const bool CConfiguration::GetHidePassword()
 
 void CConfiguration::SetHidePassword(const bool do_it)
 {
-	if(do_it)
-		SetIntData(HIDEPASSWORDKEY, 1);
-	else
-		SetIntData(HIDEPASSWORDKEY, 0);
+	SetIntData(HIDEPASSWORDKEY, do_it?1:0);
 }
 
 const bool CConfiguration::GetLogToFile()
@@ -248,10 +234,7 @@ const bool CConfiguration::GetLogToFile()
 
 void CConfiguration::SetLogToFile(const bool do_it)
 {
-	if(do_it)
-		SetIntData(LOGTOFILEKEY, 1);
-	else
-		SetIntData(LOGTOFILEKEY, 0);
+	SetIntData(LOGTOFILEKEY, do_it?1:0);
 }
 
 
@@ -263,11 +246,37 @@ const bool CConfiguration::GetMinimizeMemoryUsage()
 
 void CConfiguration::SetMinimizeMemoryUsage(const bool do_it)
 {
-	if(do_it)
-		SetIntData(MINIMIZEMEMORYUSAGEKEY, 1);
-	else
-		SetIntData(MINIMIZEMEMORYUSAGEKEY, 0);
+	SetIntData(MINIMIZEMEMORYUSAGEKEY, do_it?1:0);
 }
+
+const bool CConfiguration::GetRestartDHCPWhenNeeded()
+{
+	return (GetIntData(RESTARTDHCPWHENNEEDEDKEY, 0) != 0);
+}
+
+
+void CConfiguration::SetRestartDHCPWhenNeeded(const bool do_it)
+{
+	SetIntData(RESTARTDHCPWHENNEEDEDKEY, do_it?1:0);
+}
+
+/**
+ * Time in seconds
+ */
+const int CConfiguration::GetLogoutTimeBeforeRestartDHCP()
+{
+	return GetIntData(LOGOUTTIMEBEFORERESTARTKEY, 1800);
+}
+
+
+/**
+ * Time in seconds
+ */
+void CConfiguration::SetLogoutTimeBeforeRestartDHCP(const int time)
+{
+	SetIntData(LOGOUTTIMEBEFORERESTARTKEY, time);
+}
+
 
 
 const CString CConfiguration::GetLogFile()
@@ -324,10 +333,7 @@ const bool CConfiguration::GetVisibleAsService()
 
 void CConfiguration::SetVisibleAsService(const bool be_it)
 {
-	if(be_it)
-		SetIntData(VISIBLEASSERVICE, 1);
-	else
-		SetIntData(VISIBLEASSERVICE, 0);
+	SetIntData(VISIBLEASSERVICE, be_it?1:0);
 }
 
 
@@ -337,12 +343,9 @@ const bool CConfiguration::GetServicePopupError()
 }
 
 
-void CConfiguration::SetServicePopupError(const bool be_it)
+void CConfiguration::SetServicePopupError(const bool do_it)
 {
-	if(be_it)
-		SetIntData(SERVICEPOPUPERROR, 1);
-	else
-		SetIntData(SERVICEPOPUPERROR, 0);
+	SetIntData(SERVICEPOPUPERROR, do_it?1:0);
 }
 
 
@@ -354,9 +357,9 @@ const bool CConfiguration::GetRunAsService()
 
 void CConfiguration::SetRunAsService(const bool do_it)
 {
+	CServiceMaster::RemoveService();
 	if(do_it)
 	{
-		CServiceMaster::RemoveService();
 		if(CServiceMaster::InstallService())
 		{
 			SetIntData(RUNASSERVICE, 1);
@@ -364,7 +367,6 @@ void CConfiguration::SetRunAsService(const bool do_it)
 	}
 	else
 	{
-		CServiceMaster::RemoveService();
 		SetIntData(RUNASSERVICE, 0);
 	}
 }

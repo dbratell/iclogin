@@ -120,6 +120,13 @@
 #define IDC_RUNASSERVICE                1027
 #define IDC_STARTUPMETHOD               1028
 #define IDC_SERVICEPOPUPERRORS          1029
+#define IDC_RESTARTDHCPBUTTON           1033
+#define IDC_RESTARTDHCP                 1034
+#define IDS_RESTARTDHCP                 1034
+#define IDS_RESTARTDHCPTOOLTIP          1035
+#define IDS_RESTARTDHCPSTARTED          1036
+#define IDS_RESTARTDHCPSUCCEEDED        1037
+#define IDS_RESTARTDHCPFAILED           1038
 #define IDC_ABOUT                       32776
 
 // Next default values for new objects
@@ -128,7 +135,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        158
 #define _APS_NEXT_COMMAND_VALUE         32780
-#define _APS_NEXT_CONTROL_VALUE         1033
+#define _APS_NEXT_CONTROL_VALUE         1035
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

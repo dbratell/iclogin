@@ -40,7 +40,6 @@ CTrayIcon::~CTrayIcon()
 	nid.uID = TRAYICONID;
 	nid.uFlags = NIF_TIP;
 	Shell_NotifyIcon_Proxy(NIM_DELETE, &nid);
-	strcpy(nid.szTip, _T("IC Login"));
 }
 
 
@@ -139,7 +138,11 @@ void CTrayIcon::ModifyIcon() const
 	nid.uCallbackMessage = IC_TRAYICON;
 	nid.hIcon = m_hcurrenticon; 
 	strcpy(nid.szTip, m_tooltip);
-	Shell_NotifyIcon_Proxy(NIM_MODIFY, &nid);
+	if(!Shell_NotifyIcon_Proxy(NIM_MODIFY, &nid))
+	{
+		// The shell may have crashed. Let's add the icon instead.
+		Shell_NotifyIcon_Proxy(NIM_ADD, &nid);
+	}
 
 }
 

@@ -29,6 +29,7 @@ void CConfigurationDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CConfigurationDialog)
+	DDX_Control(pDX, IDC_RESTARTDHCP, m_restartdhcp);
 	DDX_Control(pDX, IDC_STARTUPMETHOD, m_startupmethod);
 	DDX_Control(pDX, IDC_SERVICEPOPUPERRORS, m_servicepopuperror);
 	DDX_Control(pDX, IDC_NOAUTOSTART, m_noautostart);
@@ -83,26 +84,12 @@ BOOL CConfigurationDialog::OnInitDialog()
 
 	data.LoadString(IDS_HIDEPASSWORDLABEL);
 	m_hidepassword.SetWindowText(data);
-	if(CConfiguration::GetHidePassword())
-	{
-		m_hidepassword.SetCheck(true);
-	} 
-	else
-	{
-		m_hidepassword.SetCheck(false);
-	}
+	m_hidepassword.SetCheck(CConfiguration::GetHidePassword());
 	OnHidepassword(); // Does the hiding
 
 	data.LoadString(IDS_LOGINATSTARTUPLABEL);
 	m_loginatstartup.SetWindowText(data);
-	if(CConfiguration::GetLoginAtStartup())
-	{
-		m_loginatstartup.SetCheck(true);
-	}
-	else
-	{
-		m_loginatstartup.SetCheck(false);
-	}
+	m_loginatstartup.SetCheck(CConfiguration::GetLoginAtStartup());
 
 	data.LoadString(IDS_LOGINATINTERVALLABEL);
 	m_loginatinterval.SetWindowText(data);
@@ -111,42 +98,20 @@ BOOL CConfigurationDialog::OnInitDialog()
 	if(interval < 1) interval = 1;
 	number.Format("%d", interval);
 	m_loginatintervalfield.SetWindowText(number);
-	if(CConfiguration::GetLoginAtInterval())
-	{
-		m_loginatinterval.SetCheck(true);
-		m_loginatintervalfield.EnableWindow(true);
-	}
-	else
-	{
-		m_loginatstartup.SetCheck(false);
-		m_loginatintervalfield.EnableWindow(false);
-	}
+	bool loginatinterval = CConfiguration::GetLoginAtInterval();
+	m_loginatinterval.SetCheck(loginatinterval);
+	m_loginatintervalfield.EnableWindow(loginatinterval);
 
 	data.LoadString(IDS_LOGINATINTERVALUNIT);
 	m_loginatintervalunit.SetWindowText(data);
 
 	data.LoadString(IDS_STARTHIDDEN);
 	m_starthidden.SetWindowText(data);
-	if(CConfiguration::GetStartHidden())
-	{
-		m_starthidden.SetCheck(true);
-	}
-	else
-	{
-		m_starthidden.SetCheck(false);
-	}
+	m_starthidden.SetCheck(CConfiguration::GetStartHidden());
 
 	data.LoadString(IDS_LOGTOFILE);
 	m_logtofile.SetWindowText(data);
-	if(CConfiguration::GetLogToFile())
-	{
-		m_logtofile.SetCheck(true);
-	}
-	else
-	{
-		m_logtofile.SetCheck(false);
-	}
-
+	m_logtofile.SetCheck(CConfiguration::GetLogToFile());
 
 	data.LoadString(IDS_CLEANREGISTRYBUTTON);
 	m_cleanregistrybutton.SetWindowText(data);
@@ -191,15 +156,12 @@ BOOL CConfigurationDialog::OnInitDialog()
 
 	data.LoadString(IDS_SERVICEPOPUPERROR);
 	m_servicepopuperror.SetWindowText(data);
-	if(CConfiguration::GetServicePopupError())
-	{
-		m_servicepopuperror.SetCheck(true);
-	}
-	else
-	{
-		m_servicepopuperror.SetCheck(false);
-	}
+	m_servicepopuperror.SetCheck(CConfiguration::GetServicePopupError());
 
+
+	data.LoadString(IDS_RESTARTDHCP);
+	m_restartdhcp.SetWindowText(data);
+	m_restartdhcp.SetCheck(CConfiguration::GetRestartDHCPWhenNeeded());
 
 	EnableToolTips(true);
 	
@@ -266,6 +228,8 @@ void CConfigurationDialog::OnOK()
 	CConfiguration::SetLoginAtStartup(m_loginatstartup.GetCheck() != 0);
 
 	CConfiguration::SetLoginAtInterval(m_loginatinterval.GetCheck() != 0);
+
+	CConfiguration::SetRestartDHCPWhenNeeded(m_restartdhcp.GetCheck() != 0);
 
 	CConfiguration::SetStartHidden(m_starthidden.GetCheck() != 0);
 
@@ -430,6 +394,9 @@ BOOL CConfigurationDialog::OnToolTipNotify(UINT, NMHDR *pNMHDR, LRESULT *pResult
 	   break;
    case IDC_SERVICEPOPUPERRORS:
 	   pTTT->lpszText = (LPTSTR)IDS_SERVICEPOPUPERRORSTOOLTIP;
+	   break;
+   case IDC_RESTARTDHCP:
+	   pTTT->lpszText = (LPTSTR)IDS_RESTARTDHCPTOOLTIP;
 	   break;
 
    default: // No tooltip

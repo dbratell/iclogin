@@ -38,6 +38,10 @@ public:
 	static void SetAutoStart(bool do_it);
 	static const bool GetMinimizeMemoryUsage();
 	static void SetMinimizeMemoryUsage(bool do_it);
+	static const bool GetRestartDHCPWhenNeeded();
+	static void SetRestartDHCPWhenNeeded(bool do_it);
+	static const int GetLogoutTimeBeforeRestartDHCP();
+	static void SetLogoutTimeBeforeRestartDHCP(const int time);
 	static const bool GetLogToFile();
 	static void SetLogToFile(bool do_it);
 	static const CString GetLogFile();

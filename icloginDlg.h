@@ -13,6 +13,7 @@
 #define LOGINTIMER 1284
 #define UPDATETIMER 1433
 #define ROTATEICONTIMER 1543
+#define RESTARTDHCPTIMER 2313
 
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginDlg dialog
@@ -66,10 +67,15 @@ protected:
 	afx_msg LRESULT OnLogoutStarted(WPARAM, LPARAM);
 	afx_msg LRESULT OnLogoutFailed(WPARAM, LPARAM);
 	afx_msg LRESULT OnLogoutSucceeded(WPARAM, LPARAM);
+	afx_msg LRESULT OnRestartDHCPStarted(WPARAM, LPARAM);
+	afx_msg LRESULT OnRestartDHCPFailed(WPARAM, LPARAM);
+	afx_msg LRESULT OnRestartDHCPSucceeded(WPARAM, LPARAM);
 	afx_msg LRESULT OnLoginThreadStarted(WPARAM, LPARAM);
 	afx_msg LRESULT OnLoginThreadTerminated(WPARAM, LPARAM);
 	afx_msg LRESULT OnLogoutThreadStarted(WPARAM, LPARAM);
 	afx_msg LRESULT OnLogoutThreadTerminated(WPARAM, LPARAM);
+	afx_msg LRESULT OnRestartDHCPThreadStarted(WPARAM, LPARAM);
+	afx_msg LRESULT OnRestartDHCPThreadTerminated(WPARAM, LPARAM);
 	afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnDestroy();
 	afx_msg LRESULT OnResolvingName(WPARAM wparam, LPARAM);
@@ -88,6 +94,7 @@ protected:
 	afx_msg void OnAboutDialog();
 	afx_msg void OnClose();
 	virtual void OnOK();
+	afx_msg void OnRestartDHCP();
 	//}}AFX_MSG
 	afx_msg BOOL OnToolTipNotify(UINT id, NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
@@ -104,10 +111,13 @@ private:
 	void LoadIcons();
 	void MinimizeMemoryUsage(bool reallyminimize = false);
 	void OnThreadTerminated();
+	void OnThreadStarted();
+
 
 // Attributes
 	UINT m_logintimer;
 	UINT m_updatetimer;
+	UINT m_restartdhcptimer;
 	int m_currentstatus;  // -1 not logged in, 0 unknown, 1 logged in.
 	int m_expectedstatus;
 	bool m_failedlastlogin;
