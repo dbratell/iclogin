@@ -24,6 +24,7 @@ public:
 
 protected:
 	void ModifyIcon() const;
+	BOOL Shell_NotifyIcon_Proxy(DWORD dwMessage, PNOTIFYICONDATA pnid) const;
 
 	// Attributes
 private:

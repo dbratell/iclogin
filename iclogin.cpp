@@ -55,7 +55,7 @@ BOOL CIcloginApp::InitInstance()
 //		AfxMessageBox(_T("Previous version detected, will now restore it"), MB_OK);
 		CInstanceChecker::ActivateOtherInstance();
 		return FALSE;
-	}
+	} 
 
 	g_log.SetLogLevel(CConfiguration::GetLogLevel());
 	if(CConfiguration::GetLogToFile())
@@ -65,8 +65,8 @@ BOOL CIcloginApp::InitInstance()
 
 	g_log.Log("IC Login started");
 
-#ifdef ICLOGIN_SERVICE
 
+#ifdef ICLOGIN_SERVICE
 	if(IsWindowsNT())
 	{
 		CString commandline(m_lpCmdLine);
@@ -89,6 +89,14 @@ BOOL CIcloginApp::InitInstance()
 	//		AfxMessageBox("Run as service!");
 		}
 	}
+
+	// We are not started as a service
+	if(CServiceMaster::IsRunning())
+	{
+		AfxMessageBox(IDS_SERVICERUNNING);
+		return false;
+	}
+
 
 #endif
 	

@@ -22,7 +22,7 @@ static char THIS_FILE[]=__FILE__;
 //////////////////////////////////////////////////////////////////////
 
 CServiceMaster::CServiceMaster()
-: m_ssh(0)
+: m_ssh(0), m_wnd(NULL)
 {
 }
 
@@ -125,6 +125,8 @@ bool CServiceMaster::SetServiceDescription(SC_HANDLE servicehandle, LPTSTR descr
 	sd.lpDescription = description;
 	
 	return func(servicehandle, SERVICE_CONFIG_DESCRIPTION, &sd) != FALSE;
+
+	FreeLibrary(advapi32dll);
 
 }
 
@@ -251,11 +253,19 @@ bool CServiceMaster::SetStatus(int status)
 	servicestatus.dwCurrentState       = status; 
 	servicestatus.dwCheckPoint         = 0; 
 	servicestatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-	servicestatus.dwWaitHint           = 0; 
+	servicestatus.dwWaitHint           = 2000;  // 2000 ms
 	servicestatus.dwWin32ExitCode      = 0; 
 	servicestatus.dwServiceSpecificExitCode = 0; 
 	servicestatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | 
 		SERVICE_ACCEPT_SHUTDOWN;
+
+	switch(status)
+	{
+	case SERVICE_START_PENDING:
+	case SERVICE_STOP_PENDING:
+	case SERVICE_STOPPED:
+		servicestatus.dwControlsAccepted = 0;
+	}
 
 	BOOL rv = SetServiceStatus (m_ssh, &servicestatus); 
 	if(!rv)
@@ -304,6 +314,55 @@ bool CServiceMaster::SetServiceFunctions()
 }
 
 
+bool CServiceMaster::IsRunning()
+{
+	if(!IsWindowsNT())
+		return false;
+
+	SC_HANDLE servicehandle, scm;
+	scm = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, 
+		SC_MANAGER_CREATE_SERVICE);
+	if(!scm)
+		return false;
+
+	servicehandle = OpenService(scm,
+		CConfiguration::GetServiceName(),
+		READ_CONTROL | SERVICE_QUERY_STATUS);
+
+	if(!servicehandle)
+	{
+		VERIFY(CloseServiceHandle(scm));
+		return false;
+	}
+
+	bool return_value = false;
+	SERVICE_STATUS ss;
+	if(QueryServiceStatus(servicehandle, &ss))
+	{
+		if(ss.dwCurrentState != SERVICE_STOPPED)
+		{
+			return_value = true;
+		}
+	}
+
+	VERIFY(CloseServiceHandle(scm));
+	VERIFY(CloseServiceHandle(servicehandle));
+	return return_value;
+}
+
+
+
+//SERVICE_STATUS_HANDLE CServiceMaster::GetServiceStatusHandle()
+//{
+//}
+
+CServiceMaster& CServiceMaster::GetServiceMaster()
+{
+	static CServiceMaster sm;
+	return sm;
+}
+
+
 
 void WINAPI ICLoginServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 {
@@ -317,10 +376,10 @@ void WINAPI ICLoginServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 		g_log.Log(message, CLog::LOG_DUMP);
 	}
 
-	CServiceMaster sm;
+	CServiceMaster &sm = CServiceMaster::GetServiceMaster();
 	sm.RegisterUsAsRunningService(); // Will set the status as running.
 
-	CIcloginDlg *mainwnd = new CIcloginDlg; // It destroys itself.
+	CIcloginDlg *mainwnd = new CIcloginDlg(NULL, true); // It destroys itself.
 
 	if(mainwnd)
 	{
@@ -335,6 +394,8 @@ void WINAPI ICLoginServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 		{
 			mainwnd->ShowWindow(SW_SHOW);
 		}
+		
+		sm.SetWnd(mainwnd);
 
 		// Enter main message loop
 		MSG current_message;
@@ -344,6 +405,7 @@ void WINAPI ICLoginServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 			if(!rv)
 			{
 				// WM_QUIT
+				g_log.Log("Service got quitrequest", CLog::LOG_INFO);
 				break;
 			}
 			if(rv == -1)
@@ -353,9 +415,21 @@ void WINAPI ICLoginServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 			}
 
 //	if (m_msgCur.message != WM_KICKIDLE && !PreTranslateMessage(&m_msgCur))
-			::TranslateMessage(&current_message);
-			::DispatchMessage(&current_message);
+			if(!::IsWindow(*mainwnd) || !mainwnd->PreTranslateMessage(&current_message))
+			{
+				::TranslateMessage(&current_message);
+				::DispatchMessage(&current_message);
+			}
 		}
+
+		// The only way we can quit is if the systen sends a STOP request
+		// and in that case the dialog is ended which in turn causes
+		// PostQuitMessage() to be called, so the window should really
+		// have been killed here.
+//		if(::IsWindow(*mainwnd))
+//		{
+//			mainwnd->EndDialog(0);
+//		}
 	}
 
 	sm.SetStatus(SERVICE_STOPPED);
@@ -366,28 +440,39 @@ void WINAPI ICLoginServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 
 VOID WINAPI ServiceHandler(DWORD dwCtrlCode)
 {
+	CServiceMaster &sm = CServiceMaster::GetServiceMaster();
+
 	CString message;
+	CWnd *wnd = sm.GetWnd(); 
 	switch(dwCtrlCode)
 	{
 	case SERVICE_CONTROL_STOP:
+		sm.SetStatus(SERVICE_STOP_PENDING);
 		message = "They wants us to stop. :-)";
+		wnd->PostMessage(WM_COMMAND, IDOK, 0);
 		break;
 	case SERVICE_CONTROL_PAUSE:
+		sm.SetStatus(SERVICE_RUNNING);
 		message = "They wants us to pause.";
 		break;
 	case SERVICE_CONTROL_CONTINUE:
+		sm.SetStatus(SERVICE_RUNNING);
 		message = "They wants us to resume.";
 		break;
 	case SERVICE_CONTROL_INTERROGATE:
+		sm.SetStatus(SERVICE_RUNNING);
 		message = "They wants us to tell them what we're doing.";
 		break;
 	case SERVICE_CONTROL_SHUTDOWN:
+		sm.SetStatus(SERVICE_STOP_PENDING);
 		message = "System shutting down.";
+		wnd->PostMessage(WM_COMMAND, IDOK, NULL);
 		break;
 	default:
+		sm.SetStatus(SERVICE_RUNNING);
 		message.Format("Code: %d", dwCtrlCode);
 	}
-	AfxMessageBox(message);
+	g_log.Log(message, CLog::LOG_DUMP);
 }
 
 

@@ -17,9 +17,10 @@
 // CIcloginDlg dialog
 class CIcloginDlg : public CDialog
 {
-// Construction
+// Construction and destruction
 public:
-	CIcloginDlg(CWnd* pParent = NULL);	// standard constructor
+	CIcloginDlg(CWnd* pParent = NULL, bool running_as_service=false);	// standard constructor
+	~CIcloginDlg();
 
 // Dialog Data
 	//{{AFX_DATA(CIcloginDlg)
@@ -101,13 +102,14 @@ private:
 	int m_currentstatus;  // -1 not logged in, 0 unknown, 1 logged in.
 	int m_expectedstatus;
 	bool m_failedlastlogin;
+	bool m_running_as_service;
 
 	CTimeSpan m_loggedintimespan, m_loggedouttimespan;
 	CTime m_laststatustime;
 	bool m_everlogin, m_everlogout;
 	CTime m_lastlogintime, m_lastlogouttime;
 
-	CTrayIcon m_trayicon;
+	CTrayIcon *m_trayicon;
 	bool m_oktoclose; // true when it's ok for the user to close the whole app
 };
 

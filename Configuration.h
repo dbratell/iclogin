@@ -43,10 +43,12 @@ public:
 	static const int GetLogLevel();
 	static void SetLogLevel(int loglevel);
 #ifdef ICLOGIN_SERVICE
-	static void SetServiceName(const CString &name);
 	static const CString GetServiceName();
-	static void SetServiceLongName(const CString &name);
+	static void SetServiceName(const CString &name);
 	static const CString GetServiceLongName();
+	static void SetServiceLongName(const CString &name);
+	static const bool GetVisibleAsService();
+	static void SetVisibleAsService(bool be_it);
 #endif
 
 	static void CleanRegistry();

@@ -71,6 +71,7 @@
 #define IDS_LOGTOFILE                   155
 #define IDS_LOGTOFILETOOLTIP            156
 #define IDS_CREDITS                     157
+#define IDS_SERVICERUNNING              158
 #define IDC_LOGINBUTTON                 1000
 #define IDC_LOGOUTBUTTON                1001
 #define IDC_MESSAGETEXT                 1002

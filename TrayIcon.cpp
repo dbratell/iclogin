@@ -39,7 +39,7 @@ CTrayIcon::~CTrayIcon()
 	nid.hWnd = m_hwnd;
 	nid.uID = TRAYICONID;
 	nid.uFlags = NIF_TIP;
-	Shell_NotifyIcon(NIM_DELETE, &nid);
+	Shell_NotifyIcon_Proxy(NIM_DELETE, &nid);
 	strcpy(nid.szTip, _T("IC Login"));
 }
 
@@ -65,7 +65,7 @@ void CTrayIcon::Init(CWnd *ownerwindow)
 	nid.uCallbackMessage = IC_TRAYICON;
 	nid.hIcon = m_hcurrenticon;
 	strcpy(nid.szTip, _T("IC Login"));
-	Shell_NotifyIcon(NIM_ADD, &nid);
+	Shell_NotifyIcon_Proxy(NIM_ADD, &nid);
 
 	m_inited = true;
 }
@@ -144,7 +144,7 @@ void CTrayIcon::ModifyIcon() const
 	nid.uCallbackMessage = IC_TRAYICON;
 	nid.hIcon = m_hcurrenticon; // XXX New icon
 	strcpy(nid.szTip, m_tooltip);
-	Shell_NotifyIcon(NIM_MODIFY, &nid);
+	Shell_NotifyIcon_Proxy(NIM_MODIFY, &nid);
 
 }
 
@@ -173,4 +173,31 @@ void CTrayIcon::SetLogout(const CTime &logouttime)
 	tooltip = logouttime.Format(tooltip);
 	m_hcurrenticon = m_hiconminus;
 	SetToolTip(tooltip); // Will modify the icon also.
+}
+
+
+typedef BOOL (__stdcall *Shell_NotifyIcon_Func)(DWORD dwMessage, PNOTIFYICONDATA pnid);
+
+BOOL CTrayIcon::Shell_NotifyIcon_Proxy(DWORD dwMessage, PNOTIFYICONDATA pnid) const
+{
+	HINSTANCE shell32dll = LoadLibrary(_T("shell32.dll"));
+	if(!shell32dll)
+	{
+		return FALSE;
+	}
+	Shell_NotifyIcon_Func func;
+#ifdef _UNICODE
+	func = (Shell_NotifyIcon_Func)GetProcAddress(shell32dll, "Shell_NotifyIconW");
+#else
+	func = (Shell_NotifyIcon_Func)GetProcAddress(shell32dll, "Shell_NotifyIconA");
+#endif
+	BOOL return_value = FALSE;
+	if(func)
+	{
+		return_value = func(dwMessage, pnid);
+	}
+
+	FreeLibrary(shell32dll);
+
+	return return_value;
 }

@@ -19,22 +19,30 @@ void WINAPI ICLoginServiceMain(DWORD dwArgc, LPTSTR *lpszArgv);
 
 class CServiceMaster  
 {
-public:
+private:
 	CServiceMaster();
+	operator=(const CServiceMaster &other);
+	CServiceMaster(const CServiceMaster &other);
+public:
 	virtual ~CServiceMaster();
-
 	static bool InstallService();
 	static bool RemoveService();
 	static bool IsInstalled();
+	static bool IsRunning();
 	bool RegisterUsAsRunningService();
 	static bool SetServiceFunctions();
 	bool SetStatus(int status);
+	static CServiceMaster& GetServiceMaster();
+	void SetWnd(CWnd *mainwnd) {ASSERT(!m_wnd);m_wnd = mainwnd;}
+	CWnd *GetWnd() {return m_wnd;}
+	//	SERVICE_STATUS_HANDLE GetServiceStatusHandle();
 
 private:
 	// Attributes
 //	SC_HANDLE m_scm;
 	SERVICE_STATUS_HANDLE m_ssh;
 //  SERVICE_STATUS m_servicestatus;
+	CWnd *m_wnd;
 private:
 	static bool SetServiceDescription(SC_HANDLE servicehandle, LPTSTR description);
 

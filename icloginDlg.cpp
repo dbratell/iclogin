@@ -19,18 +19,30 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginDlg dialog
 
-CIcloginDlg::CIcloginDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CIcloginDlg::IDD, pParent),
+CIcloginDlg::CIcloginDlg(CWnd* pParent /*=NULL*/, 
+						 bool running_as_service /*=false */)
+	: CDialog(CIcloginDlg::IDD, pParent), 
+	m_running_as_service(running_as_service),
 	m_logintimer(0), m_loggedintimespan(0), m_loggedouttimespan(0), 
 	m_failedlastlogin(false), m_currentstatus(0),
 	m_expectedstatus(0), m_everlogin(false), m_everlogout(false),
-	m_oktoclose(false)
+	m_oktoclose(false), m_trayicon(NULL)
 {
 	//{{AFX_DATA_INIT(CIcloginDlg)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	if(!m_running_as_service || CConfiguration::GetVisibleAsService())
+	{
+		m_trayicon = new CTrayIcon();
+	}
+}
+
+CIcloginDlg::~CIcloginDlg()
+{
+	delete m_trayicon;
 }
 
 void CIcloginDlg::DoDataExchange(CDataExchange* pDX)
@@ -449,54 +461,15 @@ void CIcloginDlg::OnConfigurebutton()
 // WM_MOUSEMOVE. See the Taskbar guide chapter for further discussion. 
 LRESULT CIcloginDlg::OnTrayIcon(WPARAM wparam, LPARAM lparam)
 {
-	return m_trayicon.HandleMessage(wparam, lparam);
-	switch(lparam)
+	if(!m_trayicon)
 	{
-	case WM_LBUTTONDBLCLK:
-		ShowWindow(SW_SHOWNORMAL);
-		SetForegroundWindow();
-
-		TRACE("(left)Doubleclick\n");
-		break;
-	case WM_LBUTTONDOWN:
-		TRACE("(left)Klicka på du bara...");
-		break;
-	case WM_LBUTTONUP:
-		TRACE("upp(left)\n");
-		break;
-	case WM_RBUTTONUP:
-		TRACE("upp(right)\n");
-		break;
-	case WM_RBUTTONDOWN:
-	case WM_CONTEXTMENU:
-		{
-			CMenu menu;
-			CPoint point;
-			GetCursorPos(&point);
-			if (menu.LoadMenu(IDR_POPUP_MENU))
-			{
-				CMenu* pPopup = menu.GetSubMenu(0);
-				ASSERT(pPopup != NULL);
-                SetForegroundWindow(); // Q135788
-				pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON,
-				point.x, point.y, this); // use main window for cmds
-			}
-		}
-		break;
-	case WM_MOUSEMOVE:
-		break;
-	case NIN_KEYSELECT:
-		ASSERT(false);
-		break;
-	case NIN_SELECT:
-		ASSERT(false);
-		break;
-	default:
-		TRACE1("Traymessage %ld!\n", lparam);
+		// Someone kidding? There is no tray icon
+		return 0;
 	}
 
-	return 0;
+	return m_trayicon->HandleMessage(wparam, lparam);
 }
+
 
 void CIcloginDlg::OnSize(UINT nType, int cx, int cy) 
 {
@@ -540,7 +513,10 @@ void CIcloginDlg::SetLoginStatus(int status)
 		icon = AfxGetApp()->LoadIcon(IDI_SAD);
 		m_everlogout = true;
 		m_lastlogouttime = CTime::GetCurrentTime();
-		m_trayicon.SetLogout(m_lastlogouttime);
+		if(m_trayicon)
+		{
+			m_trayicon->SetLogout(m_lastlogouttime);
+		}
 		break;
 	case 0: // Unknown
 		icon = AfxGetApp()->LoadIcon(IDI_QUESTIONICON);
@@ -549,7 +525,10 @@ void CIcloginDlg::SetLoginStatus(int status)
 		icon = AfxGetApp()->LoadIcon(IDI_HAPPY);
 		m_everlogin = true;
 		m_lastlogintime = CTime::GetCurrentTime();
-		m_trayicon.SetLogin(m_lastlogintime);
+		if(m_trayicon)
+		{
+			m_trayicon->SetLogin(m_lastlogintime);
+		}
 		break;
 	default:
 		ASSERT(false);
@@ -706,7 +685,10 @@ BOOL CIcloginDlg::Create(CWnd *pParentWnd /*= NULL */)
 		ShowWindow(SW_SHOW);
 	}
 
-	m_trayicon.Init(this);
+	if(m_trayicon)
+	{
+		m_trayicon->Init(this);
+	}
 	
 	if(CConfiguration::GetLoginAtStartup() && !CConfiguration::GetUsername().IsEmpty())
 	{
@@ -730,6 +712,7 @@ void CIcloginDlg::OnOK()
 	TRACE("OnOK\n");
 	m_oktoclose = true;
 	DestroyWindow();
+	::PostQuitMessage(0);
 }
 
 
@@ -761,6 +744,7 @@ CString CIcloginDlg::GetLocalIpNumber()
 		UINT ipb;
 		pHost = gethostbyname(szHostName); 
 
+		// For every ip-number we got...
 		for(i = 0; 
 	       pHost!= NULL && pHost->h_addr_list[i]!= NULL; 
 		   i++ )
@@ -768,11 +752,12 @@ CString CIcloginDlg::GetLocalIpNumber()
 			int j;
 			str="";
 			bClassA = bClassB = bClassC = false;
-			for( j = 0; j < pHost->h_length; j++ )
+			// For every part of the ip number...
+			for(j=0; j<pHost->h_length; ++j)
 			{
 				CString addr;
 
-				if( j > 0 )	str += ".";
+				if(j>0)	str += ".";
 				ipb = (unsigned int)((unsigned char*)pHost->h_addr_list[i])[j];
 
 				// Define the IP range for exclusion 
@@ -784,7 +769,7 @@ CString CIcloginDlg::GetLocalIpNumber()
 					bClassC = (ipb == 192);
 					bAutoNet = (ipb == 169);
 				}
-				else if (j==1)
+				else if(j==1)
 				{
 					// Class B defined 
 					bClassB = (bClassB && ipb >= 16 && ipb <= 31);
@@ -794,7 +779,7 @@ CString CIcloginDlg::GetLocalIpNumber()
 					bClassC = (bClassC && ipb == 168);
 					if(bClassC) break;
 
-					//AutoNet pasibility defined 
+					//AutoNet passibility defined 
 					bAutoNet = (bAutoNet && ipb == 254);
 					if(bAutoNet) break;
 				}
@@ -808,7 +793,7 @@ CString CIcloginDlg::GetLocalIpNumber()
 
 			// If any address of Internet Address area  
 			// has been found returns TRUE 
-			if (!bClassA && !bClassB && !bClassC && !bAutoNet && 
+			if(!bClassA && !bClassB && !bClassC && !bAutoNet && 
 				str != "127.0.0.1" && !str.IsEmpty()) 
 			{
 				WSACleanup();
@@ -817,7 +802,7 @@ CString CIcloginDlg::GetLocalIpNumber()
 		}
 	}
 
-	if (bPrivateAdr)
+	if(bPrivateAdr)
 	{
 		// The system has IP address from Private Address 
 		// area,only. Internet from the computer can be accessable 

@@ -69,9 +69,31 @@ BOOL CAboutDialog::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
+typedef HINSTANCE (__stdcall *ShellExecuteFunc)(HWND hwnd, LPCTSTR lpVerb, LPCTSTR lpFile, LPCTSTR lpParameters, LPCTSTR lpDirectory, INT nShowCmd);
+
 void CAboutDialog::OnAppurl() 
 {
-	ShellExecute(*this, NULL, IC_APPURL, NULL, "", SW_RESTORE);
+	// This is the only use of shell.dll which is a large dll. Better to
+	// open it dynamically, since people don't care about working set when
+	// judging a program.
+
+	HINSTANCE shell32dll = LoadLibrary(_T("shell32.dll"));
+	if(!shell32dll)
+	{
+		return;
+	}
+	ShellExecuteFunc func;
+#ifdef _UNICODE
+	func = (ShellExecuteFunc)GetProcAddress(shell32dll, "ShellExecuteW");
+#else
+	func = (ShellExecuteFunc)GetProcAddress(shell32dll, "ShellExecuteA");
+#endif
+	if(func)
+	{
+		func(*this, NULL, IC_APPURL, NULL, "", SW_RESTORE);
+	}
+
+	FreeLibrary(shell32dll);
 }
 
 

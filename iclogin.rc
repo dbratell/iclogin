@@ -226,6 +226,7 @@ BEGIN
     IDS_LOGTOFILE           "Create log on file"
     IDS_LOGTOFILETOOLTIP    "Write events in "
     IDS_CREDITS             "Thanks to Jonas Svensson, Andréas Bratell, Marcus Comstedt, !Calle Englund and Sofia Max!"
+    IDS_SERVICERUNNING      "IC Login is already running as a service. Stop the service first if you want to run IC Login as a normal application."
 END
 
 #endif    // English (U.S.) resources
@@ -316,23 +317,6 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDR_POPUP_MENU MENU DISCARDABLE 
-BEGIN
-    POPUP "Arkiv"
-    BEGIN
-        MENUITEM "Logga in",                    IDC_LOGINBUTTON
-        MENUITEM "Logga ut",                    IDC_LOGOUTBUTTON
-        MENUITEM "Avsluta",                     IDOK
-    END
-    MENUITEM "Hjälp",                       65535, HELP
-END
 
 
 #ifdef APSTUDIO_INVOKED

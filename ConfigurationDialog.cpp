@@ -5,6 +5,7 @@
 #include "iclogin.h"
 #include "ConfigurationDialog.h"
 #include "Configuration.h"
+#include "ServiceMaster.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -285,6 +286,7 @@ void CConfigurationDialog::OnKillfocusLoginintervalfield()
 
 void CConfigurationDialog::OnCleanregistrybutton() 
 {
+	CServiceMaster::RemoveService();
 	CConfiguration::CleanRegistry();
 	AfxMessageBox(IDS_CLEANREGISTRYINFORMATION);
 	::PostQuitMessage(0);

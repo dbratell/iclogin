@@ -30,6 +30,7 @@ const _TCHAR* const LOGLEVELKEY = _T("LogLevel");
 #ifdef ICLOGIN_SERVICE
 const _TCHAR* const SERVICENAMEKEY = _T("ServiceName");
 const _TCHAR* const SERVICEDISPLAYNAMEKEY = _T("ServiceDisplayName");
+const _TCHAR* const VISIBLEASSERVICE = _T("VisibleAsService");
 #endif
 
 const _TCHAR* const PROGRAMNAMEINRUN = _T("IC Login");
@@ -104,7 +105,7 @@ void CConfiguration::SetLoginInterval(int interval)
  */
 const int CConfiguration::GetLoginFailedInterval()
 {
-	return GetIntData(LOGINFAILEDINTERVALKEY, 45);
+	return GetIntData(LOGINFAILEDINTERVALKEY, 30);
 }
 
 void CConfiguration::SetLoginFailedInterval(int interval)
@@ -274,7 +275,7 @@ void CConfiguration::SetLogLevel(int loglevel)
 #ifdef ICLOGIN_SERVICE
 const CString CConfiguration::GetServiceName()
 {
-	return GetStringData(SERVICENAMEKEY, _T("IC Login Service"));
+	return GetStringData(SERVICENAMEKEY, _T("ICLogin"));
 }
 
 
@@ -294,6 +295,22 @@ void CConfiguration::SetServiceLongName(const CString &name)
 {
 	SetStringData(SERVICEDISPLAYNAMEKEY, name);
 }
+
+
+const bool CConfiguration::GetVisibleAsService()
+{
+	return (GetIntData(VISIBLEASSERVICE, 0) != 0);
+}
+
+
+void CConfiguration::SetVisibleAsService(const bool be_it)
+{
+	if(be_it)
+		SetIntData(VISIBLEASSERVICE, 1);
+	else
+		SetIntData(VISIBLEASSERVICE, 0);
+}
+
 
 #endif // ICLOGIN_SERVICE
 
