@@ -23,6 +23,7 @@ public:
 	CWnd *CComHemConnection::GetWindow() const;
 
 private:
+	static CString URLEncode(const CString original);
 	static int ExtractTimestamp(const CString& webpage, CString& timestamp);
 	static void GetUrl(CInternetSession& internet_session, 
 						   const CString& host, const CString & file, 

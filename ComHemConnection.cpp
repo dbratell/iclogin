@@ -272,13 +272,23 @@ bool CComHemConnection::LoginNewWay(CInternetSession &internet_session)
 
 	try 
 	{
-		// Open two dummy places.
+		// Open a dummy places.
 		VisitUrl(internet_session, "www.comhem.telia.se", "/ic");
 	}
 	catch(CInternetException *cie)
 	{
 		cie->Delete();
-		return false;
+		try 
+		{
+			// Open another dummy place, if the first fail. I
+			// don't know if this is enough.
+			VisitUrl(internet_session, "www.telia.com", "/");
+		}
+		catch(CInternetException *cie2)
+		{
+			cie2->Delete();
+			return false;
+		}
 	}
 
 	return true;
@@ -450,10 +460,10 @@ bool CComHemConnection::PostLogin(CInternetSession &internet_session,
 		postdata += "&";
 	}
 	postdata += "username=";
-	postdata += CConfiguration::GetUsername(); // (should be url-encoded)
+	postdata += URLEncode(CConfiguration::GetUsername()); 
 	postdata += "&";
 	postdata += "password=";
-	postdata += CConfiguration::GetPassword(); // (should be url-encoded)
+	postdata += URLEncode(CConfiguration::GetPassword());
 
 	g_log.Log("Posting to http://"+CConfiguration::GetLoginHost()+login_page);
 	try {
@@ -616,3 +626,25 @@ UINT AFX_CDECL LogoutThread( LPVOID pParam )
 	return 0;
 }
 
+
+CString CComHemConnection::URLEncode(const CString original)
+{
+	int length = original.GetLength();
+	CString encoded_string;
+	for(int i = 0; i < length; i++)
+	{
+		unsigned char the_char = original[i];
+		if(_istalnum(the_char))
+		{
+			encoded_string += the_char;
+		}
+		else
+		{
+			CString coded_char;
+			coded_char.Format("%%%x", the_char);
+			encoded_string += coded_char;
+		}
+	}
+
+	return encoded_string;
+}
