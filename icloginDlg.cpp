@@ -16,12 +16,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define IC_COMMON_WINDOW_MESSAGE _T("ICLOGIN_MESSAGE")
-
-
-UINT g_common_message = 0;
-
-
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginDlg dialog
 
@@ -37,8 +31,6 @@ CIcloginDlg::CIcloginDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-
-	g_common_message = RegisterWindowMessage(IC_COMMON_WINDOW_MESSAGE);
 }
 
 void CIcloginDlg::DoDataExchange(CDataExchange* pDX)
@@ -85,7 +77,6 @@ BEGIN_MESSAGE_MAP(CIcloginDlg, CDialog)
 	ON_BN_CLICKED(IDC_CONFIGUREBUTTON, OnConfigurebutton)
 	ON_MESSAGE(IC_TRAYICON, OnTrayIcon)
 	ON_WM_SIZE()
-	ON_REGISTERED_MESSAGE(g_common_message, OnCommonMessage)
 	ON_COMMAND(IDC_ABOUT, OnAboutDialog)
 	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
@@ -579,21 +570,6 @@ void CIcloginDlg::UpdateTimers()
 	m_loggedintime.SetWindowText(loggedinstr);
 	m_loggedouttime.SetWindowText(loggedoutstr);
 }
-
-
-LRESULT CIcloginDlg::OnCommonMessage(WPARAM wparam, LPARAM)
-{
-	if((HWND)wparam == GetSafeHwnd())
-	{
-		// It's us checking if there are someone around.
-		return 0;
-	}
-	// Someone is signalling that they are starting.
-	// Send answer (which will make them quit). Se Find_other_instance.
-	::PostMessage((HWND)wparam, g_common_message, 0, (LPARAM)GetSafeHwnd());
-	return 1;
-}
-
 
 void CIcloginDlg::OnAboutDialog() 
 {

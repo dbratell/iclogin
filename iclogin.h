@@ -16,6 +16,7 @@
 #include "Log.h"
 
 extern const char* const IC_VERSIONSTRING;
+extern const char* const IC_APPURL;
 extern CLog g_log;
 
 /////////////////////////////////////////////////////////////////////////////

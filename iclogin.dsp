@@ -19,6 +19,7 @@ CFG=iclogin - Win32 Debug
 !MESSAGE 
 !MESSAGE "iclogin - Win32 Release" (based on "Win32 (x86) Application")
 !MESSAGE "iclogin - Win32 Debug" (based on "Win32 (x86) Application")
+!MESSAGE "iclogin - Win32 Minimal" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
@@ -80,12 +81,40 @@ LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 
+!ELSEIF  "$(CFG)" == "iclogin - Win32 Minimal"
+
+# PROP BASE Use_MFC 6
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "iclogin___Win32_Minimal"
+# PROP BASE Intermediate_Dir "iclogin___Win32_Minimal"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 6
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Minimal"
+# PROP Intermediate_Dir "Minimal"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MD /W4 /GX /Zi /O1 /Oy /Ob2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FAs /FR /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /Gd /MD /W4 /GX /Zi /Od /Oy /Ob2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /D "AGG_OPT" /FAs /FR /Yu"stdafx.h" /FD /c
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x41d /d "NDEBUG" /d "_AFXDLL"
+# ADD RSC /l 0x41d /d "NDEBUG" /d "_AFXDLL"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386
+# ADD LINK32 /nologo /subsystem:windows /debug /machine:I386
+
 !ENDIF 
 
 # Begin Target
 
 # Name "iclogin - Win32 Release"
 # Name "iclogin - Win32 Debug"
+# Name "iclogin - Win32 Minimal"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
@@ -123,11 +152,11 @@ SOURCE=.\icloginDlg.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Log.cpp
+SOURCE=.\InstanceChecker.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\sinstance.cpp
+SOURCE=.\Log.cpp
 # End Source File
 # Begin Source File
 
@@ -176,15 +205,15 @@ SOURCE=.\icmessages.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\InstanceChecker.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Log.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\Resource.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\sinstance.h
 # End Source File
 # Begin Source File
 

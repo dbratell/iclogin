@@ -13,7 +13,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const char* const IC_VERSIONSTRING = "version 0.3.4";
+const _TCHAR* const IC_VERSIONSTRING = _T("version 0.4.0");
+const _TCHAR* const IC_APPURL = _T("http://www.lysator.liu.se/~bratell/iclogin/");
 
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginApp

@@ -64,8 +64,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,3,4,0
- PRODUCTVERSION 0,3,4,0
+ FILEVERSION 0,4,0,0
+ PRODUCTVERSION 0,4,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -83,14 +83,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Daniel Bratell\0"
             VALUE "FileDescription", "IC Login\0"
-            VALUE "FileVersion", "0, 3, 4, 0\0"
+            VALUE "FileVersion", "0, 4, 0\0"
             VALUE "InternalName", "iclogin\0"
             VALUE "LegalCopyright", "Copyright (C) 2000\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "iclogin.EXE\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "IC Login\0"
-            VALUE "ProductVersion", "beta0.3.4\0"
+            VALUE "ProductVersion", "0.4.0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -190,7 +190,6 @@ BEGIN
     IDS_LOGGEDINTIMEPREFIX  "Logged in:"
     IDS_LOGGEDOUTTIMEPREFIX "Logged out:"
     IDS_WRONGINTERVALVALUE  "The interval must be a number between 1 and 10000."
-    IDS_NOCOMMONMESSAGE     "Couldn't get common message. Quiting."
     IDS_STARTHIDDEN         "Start hidden"
     IDS_LOGINBUTTONTOOLTIP  "Login to Com Hem Internet Cable"
     IDS_LOGOUTBUTTONTOOLTIP "Logout from Com Hem Internet Cable"
@@ -327,19 +326,19 @@ BEGIN
                     WS_TABSTOP,106,73,84,10
 END
 
-IDD_ABOUTDIALOG DIALOG DISCARDABLE  0, 0, 186, 95
+IDD_ABOUTDIALOG DIALOG DISCARDABLE  0, 0, 202, 110
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About IC Login"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "Close",IDOK,129,74,50,14
+    DEFPUSHBUTTON   "Close",IDOK,145,89,50,14
     LTEXT           "IC Login",IDC_STATIC,44,14,27,8
     LTEXT           "A program that sets up and keeps the connection on Com Hem's Internet Cable",
                     IDC_STATIC,44,27,127,29
     LTEXT           "<set>",IDC_VERSIONLABEL,87,14,83,8
     LTEXT           "Copyright (c) 2000 Daniel Bratell",IDC_STATIC,44,57,102,
                     8
-    LTEXT           "bratell@lysator.liu.se",IDC_STATIC,44,68,65,8
+    PUSHBUTTON      "the url",IDC_APPURL,22,71,153,14,BS_FLAT
 END
 
 
@@ -362,9 +361,9 @@ BEGIN
     IDD_ABOUTDIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 179
+        RIGHTMARGIN, 195
         TOPMARGIN, 7
-        BOTTOMMARGIN, 88
+        BOTTOMMARGIN, 103
     END
 END
 #endif    // APSTUDIO_INVOKED

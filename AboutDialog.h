@@ -19,6 +19,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CAboutDialog)
 	enum { IDD = IDD_ABOUTDIALOG };
+	CButton	m_appurl;
 	CStatic	m_versionlabel;
 	//}}AFX_DATA
 
@@ -36,6 +37,7 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CAboutDialog)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnAppurl();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

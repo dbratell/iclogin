@@ -29,7 +29,7 @@ const char* const LOGFILEKEY = _T("LogFile");
 
 const char* const PROGRAMNAMEINRUN = _T("IC Login");
 
-const char* const COMPANYKEY = _T("Bratell");
+const char* const COMPANYKEY = _T("Sarasas");
 const char* const APPKEY = _T("IC Login");
 
 //////////////////////////////////////////////////////////////////////

@@ -79,7 +79,6 @@ protected:
 	afx_msg void OnConfigurebutton();
 	afx_msg LRESULT OnTrayIcon(WPARAM wparam, LPARAM lparam);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	afx_msg LRESULT OnCommonMessage(WPARAM wparam, LPARAM lparam);
 	afx_msg void OnAboutDialog();
 	afx_msg void OnClose();
 	virtual void OnOK();

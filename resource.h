@@ -36,7 +36,6 @@
 #define IDS_LOGGEDOUTTIMEPREFIX         130
 #define IDR_POPUP_MENU                  131
 #define IDS_WRONGINTERVALVALUE          131
-#define IDS_NOCOMMONMESSAGE             132
 #define IDI_HAPPY                       133
 #define IDS_STARTHIDDEN                 133
 #define IDI_SAD                         134
@@ -90,6 +89,7 @@
 #define IDC_CLEANREGISTRYBUTTON         1019
 #define IDC_AUTOSTART                   1020
 #define IDC_LOGTOFILE                   1021
+#define IDC_APPURL                      1023
 #define IDC_ABOUT                       32776
 
 // Next default values for new objects
@@ -98,7 +98,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32780
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
