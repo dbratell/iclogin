@@ -37,9 +37,14 @@ public:
 
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CIcloginDlg)
+	public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+	virtual void PostNcDestroy();
 	//}}AFX_VIRTUAL
+//	virtual BOOL Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext = NULL);
+	public:
+	virtual BOOL Create(CWnd *pParentWnd = NULL);
 
 // Implementation
 protected:
@@ -76,8 +81,10 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg LRESULT OnCommonMessage(WPARAM wparam, LPARAM lparam);
 	afx_msg void OnAboutDialog();
-	afx_msg BOOL OnToolTipNotify(UINT id, NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnClose();
+	virtual void OnOK();
 	//}}AFX_MSG
+	afx_msg BOOL OnToolTipNotify(UINT id, NMHDR *pNMHDR, LRESULT *pResult);
 	DECLARE_MESSAGE_MAP()
 
 private:
@@ -99,9 +106,9 @@ private:
 	CTime m_laststatustime;
 	bool m_everlogin, m_everlogout;
 	CTime m_lastlogintime, m_lastlogouttime;
-	bool m_startingup;
 
 	CTrayIcon m_trayicon;
+	bool m_oktoclose; // true when it's ok for the user to close the whole app
 };
 
 //{{AFX_INSERT_LOCATION}}

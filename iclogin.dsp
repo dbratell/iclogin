@@ -123,6 +123,10 @@ SOURCE=.\icloginDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Log.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -165,6 +169,10 @@ SOURCE=.\icloginDlg.h
 # Begin Source File
 
 SOURCE=.\icmessages.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Log.h
 # End Source File
 # Begin Source File
 

@@ -70,26 +70,26 @@ BOOL CIcloginApp::InitInstance()
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
 	
-	CIcloginDlg dlg;
-	m_pMainWnd = &dlg;
+	m_pMainWnd = new CIcloginDlg; // It destroys itself.
 
-	int nResponse = dlg.DoModal();
-	if (nResponse == IDOK)
+	if(m_pMainWnd)
 	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with OK
+		((CIcloginDlg *)m_pMainWnd)->Create();
+		if(CConfiguration::GetStartHidden())
+		{
+			m_pMainWnd->ShowWindow(SW_HIDE);
+		}
+		else
+		{
+			m_pMainWnd->ShowWindow(SW_SHOW);
+		}
+
+		return TRUE; // Enter message loop
 	}
-	else if (nResponse == IDCANCEL)
+	else
 	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with Cancel
+		return FALSE; // No window so we don't want to enter message loop
 	}
-
-	g_log.Log("IC Login exited");
-
-	// Since the dialog has been closed, return FALSE so that we exit the
-	//  application, rather than start the application's message pump.
-	return FALSE;
 }
 
 

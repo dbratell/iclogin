@@ -28,8 +28,9 @@ UINT g_common_message = 0;
 CIcloginDlg::CIcloginDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CIcloginDlg::IDD, pParent),
 	m_logintimer(0), m_loggedintimespan(0), m_loggedouttimespan(0), 
-	m_failedlastlogin(false), m_startingup(true), m_currentstatus(0),
-	m_expectedstatus(0), m_everlogin(false), m_everlogout(false)
+	m_failedlastlogin(false), m_currentstatus(0),
+	m_expectedstatus(0), m_everlogin(false), m_everlogout(false),
+	m_oktoclose(false)
 {
 	//{{AFX_DATA_INIT(CIcloginDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -86,6 +87,7 @@ BEGIN_MESSAGE_MAP(CIcloginDlg, CDialog)
 	ON_WM_SIZE()
 	ON_REGISTERED_MESSAGE(g_common_message, OnCommonMessage)
 	ON_COMMAND(IDC_ABOUT, OnAboutDialog)
+	ON_WM_CLOSE()
 	//}}AFX_MSG_MAP
 	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTW, 0, 0xFFFF, OnToolTipNotify)
 	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTA, 0, 0xFFFF, OnToolTipNotify)
@@ -112,42 +114,9 @@ BOOL CIcloginDlg::OnInitDialog()
 	// TODO: Add extra initialization here
 	SetupLocalizedText();
 
-	// Configure it if this is the first time.
-	if(!CConfiguration::GetIsConfigured())
-	{
-		g_log.Log("First start.");
-		CConfigurationDialog config_dialog;
-		if(config_dialog.DoModal() != IDOK)
-		{
-			// Without configuration, it's not much we can do.
-			g_log.Log("No configuration. Have to quit.");
-			EndDialog(IDCANCEL);
-			return true;
-		}
-		
-		CConfiguration::SetIsConfigured(true);
-	}
-
-	if(CConfiguration::GetStartHidden())
-	{
-//		SetWindowPos(NULL, 0,0,0,0, SWP_HIDEWINDOW | SWP_NOZORDER | 
-//			SWP_NOMOVE  | SWP_NOSIZE );
-//		ModifyStyle(WS_VISIBLE, 0);
-	}
-
-	m_trayicon.Init(this);
-
 	EnableToolTips(true);
 	
 	SetLoginStatus(0);
-
-	if(CConfiguration::GetLoginAtStartup() && !CConfiguration::GetUsername().IsEmpty())
-		StartLoginThread(this);
-
-	SetupLoginTimer();
-	m_updatetimer = SetTimer(UPDATETIMER, 
-			CConfiguration::GetUpdateTimersInterval()*1000, 
-			NULL);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -529,16 +498,7 @@ void CIcloginDlg::OnSize(UINT nType, int cx, int cy)
 	
 	TRACE2(" cx=%d. cy=%d\n", cx, cy);
 
-	if(m_startingup && nType == SIZE_RESTORED && CConfiguration::GetStartHidden())
-	{
-	    // To force ourself into hiding.
-		// There must be a better way to do it!
-        PostMessage(WM_SIZE, SIZE_MINIMIZED);
-//		ShowWindow(SW_MINIMIZE); 
-//      ShowWindow(SW_HIDE); 
-		m_startingup = false;
-	}
-	else if(nType == SIZE_MINIMIZED)
+	if(nType == SIZE_MINIMIZED)
 	{
 		ShowWindow(SW_HIDE);
 	}
@@ -775,4 +735,71 @@ BOOL CIcloginDlg::OnToolTipNotify(UINT, NMHDR *pNMHDR, LRESULT *pResult)
    *pResult = 0;
 
    return TRUE;    // message was handled
+}
+
+void CIcloginDlg::PostNcDestroy() 
+{
+	g_log.Log("IC Login exited");
+	delete this;
+}
+
+void CIcloginDlg::OnClose() 
+{
+	if (m_oktoclose)
+	{
+		// CleanUp ();
+		DestroyWindow();
+	}
+	else
+	{
+		ShowWindow(SW_HIDE);
+	}
+
+	// CDialog::OnClose();
+}
+
+//BOOL CIcloginDlg::Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID, CCreateContext* pContext) 
+BOOL CIcloginDlg::Create(CWnd *pParentWnd /*= NULL */) 
+{
+	BOOL returnvalue = CDialog::Create(IDD, pParentWnd);
+	// Configure it if this is the first time.
+	if(!CConfiguration::GetIsConfigured())
+	{
+		ShowWindow(SW_HIDE);
+		g_log.Log("First start.");
+		CConfigurationDialog config_dialog;
+		if(config_dialog.DoModal() != IDOK)
+		{
+			// Without configuration, it's not much we can do.
+			g_log.Log("No configuration. Have to quit.");
+			EndDialog(0);
+			::PostQuitMessage(0);
+			return false;
+		}
+		
+		CConfiguration::SetIsConfigured(true);
+		ShowWindow(SW_SHOW);
+	}
+
+	m_trayicon.Init(this);
+	
+	if(CConfiguration::GetLoginAtStartup() && !CConfiguration::GetUsername().IsEmpty())
+		StartLoginThread(this);
+
+	SetupLoginTimer();
+	m_updatetimer = SetTimer(UPDATETIMER, 
+			CConfiguration::GetUpdateTimersInterval()*1000, 
+			NULL);
+
+	return returnvalue;
+}
+
+/**
+ * Called when the user choses exit from the menu.
+ */
+void CIcloginDlg::OnOK() 
+{
+	TRACE("OnOK\n");
+	m_oktoclose = true;
+	DestroyWindow();
 }
