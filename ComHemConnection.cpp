@@ -567,7 +567,7 @@ int CComHemConnection::FindSubString(const CString &str, const CString &substr, 
 	LPCTSTR res = strstr(str1, substr1);
 	if(res)
 	{
-		return ((int)res - (int)str1)/sizeof(_TCHAR);
+		return (((int)res - (int)str1)/sizeof(_TCHAR))+start;
 	}
 	return -1;
 }
