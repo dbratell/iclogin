@@ -37,6 +37,8 @@ private:
 	static void LogInternetError(const CInternetSession &internet_session,
 		const CString& operation, CInternetException *ie);
 
+	static int FindSubString(const CString &str, const CString &substr, int start=0);
+
 
 	// Attributes
 	CWnd *m_parent_window;

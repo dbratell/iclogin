@@ -250,6 +250,10 @@ SOURCE=.\res\happy1.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\happy2.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\happy3.ico
 # End Source File
 # Begin Source File
@@ -287,6 +291,14 @@ SOURCE=.\res\LProgikon.ico
 # Begin Source File
 
 SOURCE=.\res\questio1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\questio2.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\questio3.ico
 # End Source File
 # Begin Source File
 

@@ -52,11 +52,11 @@ int CComHemConnection::ExtractTimestamp(const CString& webpage, CString &timesta
 	
 	CString lowerpage = webpage;
 	lowerpage.MakeLower();
-	formstart = lowerpage.Find("<form");
+	formstart = FindSubString(lowerpage, "<form");
 	if(formstart == -1)
 		return -1; // No form 
 
-	formend = lowerpage.Find("</form>", formstart);
+	formend = FindSubString(lowerpage, "</form>", formstart);
 	if(formend == -1) {
 		// strange html. Let go for now.
 	}
@@ -65,28 +65,28 @@ int CComHemConnection::ExtractTimestamp(const CString& webpage, CString &timesta
 	bool found_timestamp_input = false;
 	while(!found_timestamp_input)
 	{
-		inputindex = lowerpage.Find("<input", inputindex);
+		inputindex = FindSubString(lowerpage, "<input", inputindex);
 		if(inputindex == -1)
 			return -1;
 
-		int inputend = lowerpage.Find('>', inputindex);
+		int inputend = FindSubString(lowerpage, '>', inputindex);
 		if(inputend == -1)
 			return -1;
 
 		CString input = lowerpage.Mid(inputindex, inputend-inputindex);
 		// TRACE(input);
 
-		int name = input.Find("name=\"timestamp\"");
+		int name = FindSubString(input,"name=\"timestamp\"");
 		if(name == -1)
 			continue;
 
 		// We found it!
-		int value = input.Find("value=\"");
+		int value = FindSubString(input, "value=\"");
 		if(value == -1)
 			return -1;
 	
 		value += 7;
-		int endingquote = input.Find('"', value);
+		int endingquote = FindSubString(input, '"', value);
 		if(endingquote == -1)
 			return -1;
 
@@ -106,8 +106,8 @@ bool CComHemConnection::Is_loggined() const
 		GetUrl(internet_session, CConfiguration::GetLoginHost(), 
 			"/serviceSelection.php3", page);
 		page.MakeLower();
-		int kstart = page.Find("kabel-tv internet");
-		if(kstart>0 && page.Find("aktiv", kstart) != -1)
+		int kstart = FindSubString(page, "kabel-tv internet");
+		if(kstart>0 && FindSubString(page, "aktiv", kstart) != -1)
 		{
 			g_log.Log("Finding keywords.", CLog::LOG_DUMP);
 			return_value = true;
@@ -144,12 +144,12 @@ bool CComHemConnection::Login() const
 			GetUrl(internet_session, CConfiguration::GetLoginHost(),
 				"/", page);
 			page.MakeLower();
-			if(page.Find("login.php3") != -1)
+			if(FindSubString(page, "login.php3") != -1)
 			{
 				m_login_method = LOGIN_METHOD_OLD;
 				g_log.Log("Detecting 'old' login method.");
 			}
-			else if(page.Find("sd/") != -1)
+			else if(FindSubString(page, "sd/") != -1)
 			{
 				m_login_method = LOGIN_METHOD_NEW;
 				g_log.Log("Detecting 'new' login method.");
@@ -221,7 +221,7 @@ bool CComHemConnection::LoginOldWay(CInternetSession &internet_session)
 	} 
 
 	page.MakeLower();
-	if(page.Find("password") == -1 && page.Find("username") == -1)
+	if(FindSubString(page, "password") == -1 && FindSubString(page, "username") == -1)
 	{
 		// Something wrong. Fail!
 		TRACE("Already logged in.\n");
@@ -267,6 +267,17 @@ bool CComHemConnection::LoginNewWay(CInternetSession &internet_session)
 
 	if(!PostLogin(internet_session, _T(""), _T("/sd/login")))
 	{
+		return false;
+	}
+
+	try 
+	{
+		// Open two dummy places.
+		VisitUrl(internet_session, "www.comhem.telia.se", "/ic");
+	}
+	catch(CInternetException *cie)
+	{
+		cie->Delete();
 		return false;
 	}
 
@@ -538,6 +549,29 @@ void CComHemConnection::LogInternetError(const CInternetSession &internet_sessio
 		operation, errmess, extended_error);
 	g_log.Log(output, CLog::LOG_ERROR);
 }
+
+/**
+ * This function replaces CString::Find which requires a new 
+ * (1997 or something) mfc42.dll.
+ */
+int CComHemConnection::FindSubString(const CString &str, const CString &substr, int start /*=0*/)
+{
+	if(start>=str.GetLength())
+	{
+		return -1;
+	}
+
+	LPCTSTR str1 = (LPCTSTR)str;
+	LPCTSTR substr1 = (LPCTSTR)substr;
+	str1 += start;
+	LPCTSTR res = strstr(str1, substr1);
+	if(res)
+	{
+		return ((int)res - (int)str1)/sizeof(_TCHAR);
+	}
+	return -1;
+}
+
 
 void StartLoginThread(CWnd *parent)
 {
