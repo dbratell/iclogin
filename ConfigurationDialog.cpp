@@ -101,11 +101,11 @@ BOOL CConfigurationDialog::OnInitDialog()
 
 	data.LoadString(IDS_LOGINATINTERVALLABEL);
 	m_loginatinterval.SetWindowText(data);
-	char buffer[20];
+	CString number;
 	int interval = CConfiguration::GetLoginInterval()/60;
 	if(interval < 1) interval = 1;
-	_itoa(interval, buffer, 10);
-	m_loginatintervalfield.SetWindowText(buffer);
+	number.Format("%d", interval);
+	m_loginatintervalfield.SetWindowText(number);
 	if(CConfiguration::GetLoginAtInterval())
 	{
 		m_loginatinterval.SetCheck(true);
@@ -254,11 +254,11 @@ void CConfigurationDialog::OnKillfocusLoginintervalfield()
 	m_loginatintervalfield.GetWindowText(data);
 	if(data.IsEmpty())
 	{
-		char buffer[20];
+		CString number;
 		int interval = CConfiguration::GetLoginInterval()/60;
 		if(interval < 1) interval = 1;
-		_itoa(interval, buffer, 10);
-		m_loginatintervalfield.SetWindowText(buffer);
+		number.Format("%d", interval);
+		m_loginatintervalfield.SetWindowText(number);
 		return;
 	}
 

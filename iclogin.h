@@ -15,8 +15,8 @@
 #include "resource.h"		// main symbols
 #include "Log.h"
 
-extern const char* const IC_VERSIONSTRING;
-extern const char* const IC_APPURL;
+extern const _TCHAR* const IC_VERSIONSTRING;
+extern const _TCHAR* const IC_APPURL;
 extern CLog g_log;
 
 /////////////////////////////////////////////////////////////////////////////

@@ -12,25 +12,26 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-const char* const LOGINHOSTKEY = _T("LoginHost");
-const char* const USERNAMEKEY = _T("Username");
-const char* const PASSWORDKEY = _T("Password");
-const char* const LOGINATINTERVALKEY = _T("LoginAtInterval");
-const char* const LOGININTERVALKEY = _T("LoginInterval");
-const char* const LOGINFAILEDINTERVALKEY = _T("LoginFailedInterval");
-const char* const UPDATETIMERSINTERVALKEY = _T("UpdateTimersInterval");
-const char* const LOGINATSTARTUPKEY = _T("LoginAtStartup");
-const char* const HIDEPASSWORDKEY = _T("HidePassword");
-const char* const STARTHIDDENKEY = _T("StartHidden");
-const char* const ISCONFIGUREDKEY = _T("IsConfigured");
-const char* const AUTOSTARTKEY = _T("AutoStart");
-const char* const LOGTOFILEKEY = _T("LogToFile");
-const char* const LOGFILEKEY = _T("LogFile");
+const _TCHAR* const LOGINHOSTKEY = _T("LoginHost");
+const _TCHAR* const USERNAMEKEY = _T("Username");
+const _TCHAR* const PASSWORDKEY = _T("Password");
+const _TCHAR* const LOGINATINTERVALKEY = _T("LoginAtInterval");
+const _TCHAR* const LOGININTERVALKEY = _T("LoginInterval");
+const _TCHAR* const LOGINFAILEDINTERVALKEY = _T("LoginFailedInterval");
+const _TCHAR* const UPDATETIMERSINTERVALKEY = _T("UpdateTimersInterval");
+const _TCHAR* const LOGINATSTARTUPKEY = _T("LoginAtStartup");
+const _TCHAR* const HIDEPASSWORDKEY = _T("HidePassword");
+const _TCHAR* const STARTHIDDENKEY = _T("StartHidden");
+const _TCHAR* const ISCONFIGUREDKEY = _T("IsConfigured");
+const _TCHAR* const AUTOSTARTKEY = _T("AutoStart");
+const _TCHAR* const LOGTOFILEKEY = _T("LogToFile");
+const _TCHAR* const LOGFILEKEY = _T("LogFile");
+const _TCHAR* const LOGLEVELKEY = _T("LogLevel");
 
-const char* const PROGRAMNAMEINRUN = _T("IC Login");
+const _TCHAR* const PROGRAMNAMEINRUN = _T("IC Login");
 
-const char* const COMPANYKEY = _T("Sarasas");
-const char* const APPKEY = _T("IC Login");
+const _TCHAR* const COMPANYKEY = _T("Sarasas");
+const _TCHAR* const APPKEY = _T("IC Login");
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -64,8 +65,8 @@ void  CConfiguration::CleanRegistry()
 			// Should check if COMPANYKEY is empty and delete it too
 			// in that case.
 
-			_TCHAR buffer[MAX_PATH+1];
-			if(RegEnumKey(regkey2, 0, buffer, MAX_PATH+1) == 
+			CString dummy;
+			if(RegEnumKey(regkey2, 0, dummy.GetBuffer(MAX_PATH+1), MAX_PATH+1) == 
 				ERROR_NO_MORE_ITEMS)
 			{
 				if(regkey2.Close() == ERROR_SUCCESS)
@@ -97,12 +98,12 @@ void CConfiguration::SetLoginInterval(int interval)
  */
 const int CConfiguration::GetLoginFailedInterval()
 {
-	return GetIntData(LOGININTERVALKEY, 60);
+	return GetIntData(LOGINFAILEDINTERVALKEY, 45);
 }
 
 void CConfiguration::SetLoginFailedInterval(int interval)
 {
-	SetIntData(LOGININTERVALKEY, interval);
+	SetIntData(LOGINFAILEDINTERVALKEY, interval);
 }
 
 
@@ -256,6 +257,16 @@ void CConfiguration::SetLogFile(const CString &filename)
 	SetStringData(LOGFILEKEY, filename);
 }
 
+const int CConfiguration::GetLogLevel()
+{
+	return GetIntData(LOGLEVELKEY, CLog::LOG_INFO);
+}
+
+void CConfiguration::SetLogLevel(int loglevel)
+{
+	SetIntData(LOGLEVELKEY, loglevel);
+}
+
 
 const bool CConfiguration::GetAutoStart()
 {
@@ -282,10 +293,9 @@ void CConfiguration::SetAutoStart(const bool do_it)
 					{
 						if(do_it)
 						{
-							_TCHAR buffer[1000];
-							if(GetModuleFileName(NULL, buffer, 1000))
+							CString ourpath;
+							if(GetModuleFileName(NULL, ourpath.GetBuffer(1000), 1000))
 							{
-								CString ourpath(buffer);
 								regkey5.SetValue(ourpath, PROGRAMNAMEINRUN);
 							}
 
@@ -369,15 +379,7 @@ CString CConfiguration::GetStringData(const CString& key, const CString& default
 				{
 					if(data_size > 0)
 					{
-						char *buffer = new char[data_size];
-						if(buffer)
-						{
-							if(regkey3.QueryValue(buffer, key, &data_size) == ERROR_SUCCESS)
-							{
-								rv = buffer;
-							}
-						}
-						delete[] buffer;
+						regkey3.QueryValue(rv.GetBuffer(data_size), key, &data_size);
 					}
 				}
 			}

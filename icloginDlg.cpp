@@ -165,13 +165,17 @@ HCURSOR CIcloginDlg::OnQueryDragIcon()
 
 void CIcloginDlg::OnLoginbutton() 
 {
-	// TODO: Add your control notification handler code here
+	SetupLoginTimer();
 	StartLoginThread(this);
 }
 
 void CIcloginDlg::OnLogoutbutton() 
 {
-	// TODO: Add your control notification handler code here
+	if(m_logintimer != 0)
+	{
+		KillTimer(m_logintimer);
+		m_logintimer = 0;
+	}
 	StartLogoutThread(this);
 }
 
@@ -247,7 +251,10 @@ void CIcloginDlg::DisplayMessage(UINT message_id)
 void CIcloginDlg::SetupLoginTimer()
 {
 	if(m_logintimer != 0)
+	{
 		KillTimer(m_logintimer);
+		m_logintimer = 0;
+	}
 
 	if(m_failedlastlogin)
 	{
@@ -294,7 +301,10 @@ void CIcloginDlg::OnTimer(UINT nIDEvent)
 void CIcloginDlg::OnDestroy() 
 {
 	if(m_logintimer != 0)
+	{
 		KillTimer(m_logintimer);
+		m_logintimer = 0;
+	}
 
 	CDialog::OnDestroy();
 }
@@ -308,6 +318,7 @@ LRESULT CIcloginDlg::OnResolvingName(WPARAM wparam, LPARAM)
 	resolving += (LPCSTR)wparam;
 
 	m_messagetext2.SetWindowText(resolving);
+	g_log.Log(resolving, CLog::LOG_DUMP);
 	return 0;
 }
 
@@ -339,6 +350,7 @@ LRESULT CIcloginDlg::OnConnectingServer(WPARAM wparam, LPARAM)
 	connecting += (LPCSTR)wparam;
 
 	m_messagetext2.SetWindowText(connecting);
+	g_log.Log(connecting, CLog::LOG_DUMP);
 	return 0;
 }
 
@@ -356,6 +368,7 @@ LRESULT CIcloginDlg::OnSendingRequest(WPARAM, LPARAM)
 	sending.LoadString(IDS_SENDINGREQUEST);
 
 	m_messagetext2.SetWindowText(sending);
+	g_log.Log(sending, CLog::LOG_DUMP);
 	return 0;
 }
 
@@ -366,6 +379,7 @@ LRESULT CIcloginDlg::OnSentRequest(WPARAM, LPARAM)
 	sending.LoadString(IDS_SENTREQUEST);
 
 	m_messagetext2.SetWindowText(sending);
+	g_log.Log(sending, CLog::LOG_DUMP);
 	return 0;
 }
 
@@ -376,6 +390,7 @@ LRESULT CIcloginDlg::OnReceivingResponse(WPARAM, LPARAM)
 	got.LoadString(IDS_RECEIVINGRESPONSE);
 
 	m_messagetext2.SetWindowText(got);
+	g_log.Log(got, CLog::LOG_DUMP);
 	return 0;
 }
 
@@ -383,6 +398,7 @@ LRESULT CIcloginDlg::OnReceivingResponse(WPARAM, LPARAM)
 LRESULT CIcloginDlg::OnReceivedResponse(WPARAM, LPARAM)
 {
 	m_messagetext2.SetWindowText("");
+	g_log.Log("Received response", CLog::LOG_DUMP);
 	return 0;
 }
 
@@ -390,6 +406,7 @@ LRESULT CIcloginDlg::OnReceivedResponse(WPARAM, LPARAM)
 LRESULT CIcloginDlg::OnClosingConnection(WPARAM, LPARAM)
 {
 	m_messagetext2.SetWindowText("");
+	g_log.Log("Closing connection", CLog::LOG_DUMP);
 	return 0;
 }
 
@@ -397,6 +414,7 @@ LRESULT CIcloginDlg::OnClosingConnection(WPARAM, LPARAM)
 LRESULT CIcloginDlg::OnClosedConnection(WPARAM, LPARAM)
 {
 	m_messagetext2.SetWindowText("");
+	g_log.Log("Closed connection", CLog::LOG_DUMP);
 	return 0;
 }
 
@@ -546,7 +564,7 @@ void CIcloginDlg::UpdateTimers()
 	}
 	m_laststatustime = now;
 
-	char buffer[100];
+	CString buffer;
 	CString loggedinstr, loggedoutstr;
 	long loggedin_seconds = m_loggedintimespan.GetTotalSeconds();
 	long loggedout_seconds = m_loggedouttimespan.GetTotalSeconds();
@@ -555,7 +573,7 @@ void CIcloginDlg::UpdateTimers()
 	loggedinstr += m_loggedintimespan.Format(" %D:%H:%M:%S");
 	if(total_seconds > 0)
 	{
-		sprintf(buffer, " (%0.1f%%)", ((double)loggedin_seconds/total_seconds)*100.0);
+		buffer.Format(" (%0.1f%%)", ((double)loggedin_seconds/total_seconds)*100.0);
 		loggedinstr += buffer;
 	}
 
@@ -563,7 +581,7 @@ void CIcloginDlg::UpdateTimers()
 	loggedoutstr += m_loggedouttimespan.Format(" %D:%H:%M:%S");
 	if(total_seconds > 0)
 	{
-		sprintf(buffer, " (%0.1f%%)", ((double)loggedout_seconds/total_seconds)*100.0);
+		buffer.Format(" (%0.1f%%)", ((double)loggedout_seconds/total_seconds)*100.0);
 		loggedoutstr += buffer;
 	}
 

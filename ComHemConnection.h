@@ -32,8 +32,10 @@ private:
 	static bool PostLogin(CInternetSession &is, 
 		const CString &timestamp,
 		const CString &login_page);
-	static bool	Login_old_way(CInternetSession &internet_session);
-	static bool	Login_new_way(CInternetSession &internet_session);
+	static bool	LoginOldWay(CInternetSession &internet_session);
+	static bool	LoginNewWay(CInternetSession &internet_session);
+	static void LogInternetError(const CInternetSession &internet_session,
+		const CString& operation, CInternetException *ie);
 
 
 	// Attributes

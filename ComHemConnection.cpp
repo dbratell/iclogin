@@ -106,9 +106,14 @@ bool CComHemConnection::Is_loggined() const
 		int kstart = page.Find("kabel-tv internet");
 		if(kstart>0 && page.Find("aktiv", kstart) != -1)
 		{
+			g_log.Log("Finding word \"kabel-tv internet\" and \"aktiv\".", CLog::LOG_DUMP);
 			return_value = true;
 		}
-	} catch (...) { } 
+		else
+		{
+			g_log.Log("Not finding word \"kabel-tv internet\" and \"aktiv\".", CLog::LOG_DUMP);
+		}
+	} catch (CInternetException *cie) {cie->Delete(); } 
 
 	internet_session.Close();
 	return return_value;
@@ -146,9 +151,10 @@ bool CComHemConnection::Login() const
 				m_login_method = LOGIN_METHOD_NEW;
 				g_log.Log("Detecting 'new' login method.");
 			}
-		} catch (...) {
+		} catch (CInternetException *cie) {
 			m_parent_window->PostMessage(IC_LOGINFAILED);
 			internet_session.Close();
+			cie->Delete();
 			return false;
 		} 
 	}
@@ -157,7 +163,7 @@ bool CComHemConnection::Login() const
 	int our_login_method = m_login_method; 
 	if(our_login_method == LOGIN_METHOD_OLD)
 	{
-		if(!Login_old_way(internet_session))
+		if(!LoginOldWay(internet_session))
 		{
 			m_parent_window->PostMessage(IC_LOGINFAILED);
 			internet_session.Close();
@@ -166,7 +172,7 @@ bool CComHemConnection::Login() const
 	}
 	else if(our_login_method == LOGIN_METHOD_NEW)
 	{
-		if(!Login_new_way(internet_session))
+		if(!LoginNewWay(internet_session))
 		{
 			m_parent_window->PostMessage(IC_LOGINFAILED);
 			internet_session.Close();
@@ -176,9 +182,9 @@ bool CComHemConnection::Login() const
 	else if(our_login_method == LOGIN_METHOD_UNKNOWN)
 	{
 		// Try first old, then new
-		if(!Login_old_way(internet_session))
+		if(!LoginOldWay(internet_session))
 		{
-			if(!Login_new_way(internet_session))
+			if(!LoginNewWay(internet_session))
 			{
 				m_parent_window->PostMessage(IC_LOGINFAILED);
 				internet_session.Close();
@@ -205,14 +211,15 @@ bool CComHemConnection::Login() const
 	return true;
 }
 
-bool CComHemConnection::Login_old_way(CInternetSession &internet_session)
+bool CComHemConnection::LoginOldWay(CInternetSession &internet_session)
 {
 	g_log.Log("Loggin in with old method.");
 	CString page;
 	try {
 		GetUrl(internet_session, CConfiguration::GetLoginHost(),
 			"/login.php3", page);
-	} catch (...) {
+	} catch (CInternetException *cie) {
+		cie->Delete();
 		return false;
 	} 
 
@@ -241,8 +248,9 @@ bool CComHemConnection::Login_old_way(CInternetSession &internet_session)
 		VisitUrl(internet_session, CConfiguration::GetLoginHost(), "/serviceSelection.php3");
 		VisitUrl(internet_session, "www.comhem.telia.se", "/ic");
 	}
-	catch(...)
+	catch(CInternetException *cie)
 	{
+		cie->Delete();
 		return false;
 	}
 
@@ -250,12 +258,13 @@ bool CComHemConnection::Login_old_way(CInternetSession &internet_session)
 }
 
 
-bool CComHemConnection::Login_new_way(CInternetSession &internet_session)
+bool CComHemConnection::LoginNewWay(CInternetSession &internet_session)
 {
 	g_log.Log("Loggin in with new method.");
 	try {
 		VisitUrl(internet_session, CConfiguration::GetLoginHost(), _T("/sd/init"));
-	} catch (...) {
+	} catch (CInternetException *cie) {
+		cie->Delete();
 		return false;
 	} 
 
@@ -277,9 +286,10 @@ bool CComHemConnection::Logout() const
 	CICInternetSession internet_session(m_parent_window);
 	try {
 		VisitUrl(internet_session, "login1.telia.com", "/logout.php3?logout=1");
-	} catch (...) {
+	} catch (CInternetException *cie) {
 		m_parent_window->PostMessage(IC_LOGOUTFAILED);
 		internet_session.Close();
+		cie->Delete();
 		return false;
 	}
 	internet_session.Close();
@@ -315,8 +325,8 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 	try {
 		http_connection = auto_ptr<CHttpConnection>(
 			internet_session.GetHttpConnection(host));
-	} catch (...) {
-		TRACE("Couldn't get connection from internet session.\n");
+	} catch (CInternetException *cie) {
+		LogInternetError(internet_session, "GetHttpConnection", cie);
 		throw;
 	} 
 
@@ -324,16 +334,16 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 		http_file = auto_ptr<CHttpFile>(http_connection->OpenRequest(
 			CHttpConnection::HTTP_VERB_GET, file, NULL, 1, NULL, NULL, 
 			INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE));
-	} catch (...) {
-		TRACE("Couldn't get file from internet session.\n");
+	} catch (CInternetException *cie) {
+		LogInternetError(internet_session, "OpenRequest", cie);
 		http_connection->Close();
 		throw;
 	} 
 
 	try {
 		http_file->SendRequest();
-	} catch (...) {
-		TRACE("Couldn't open connection (SendRequest)!\n");
+	} catch (CInternetException *cie) {
+		LogInternetError(internet_session, "SendRequest", cie);
 		http_file->Abort();
 		http_connection->Close();
 		throw;
@@ -348,7 +358,8 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 			// TRACE(data);
 			// TRACE("\n");
 		}
-	} catch (CInternetException ie) {
+	} catch (CInternetException *cie) {
+		LogInternetError(internet_session, "ReadString", cie);
 		http_file->Abort();
 		http_connection->Close();
 		throw;
@@ -392,7 +403,9 @@ bool CComHemConnection::PostLogin(CInternetSession &internet_session,
 		http_connection = auto_ptr<CHttpConnection>(
 			internet_session.GetHttpConnection(
 				CConfiguration::GetLoginHost()));
-	} catch (...) {
+	} catch (CInternetException *cie) {
+		LogInternetError(internet_session, "GetHttpConnection", cie);
+		cie->Delete();
 		return false;
 	} 
 
@@ -401,8 +414,10 @@ bool CComHemConnection::PostLogin(CInternetSession &internet_session,
 			CHttpConnection::HTTP_VERB_POST, login_page, 
 			NULL, 1, NULL, NULL, 
 			INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE));
-	} catch (...) {
+	} catch (CInternetException *cie) {
+		LogInternetError(internet_session, "OpenRequest", cie);
 		http_connection->Close();
+		cie->Delete();
 		return false;
 	} 
 	
@@ -416,8 +431,10 @@ bool CComHemConnection::PostLogin(CInternetSession &internet_session,
 	//		TRACE(data);
 	//		TRACE("\n");
 		}
-	} catch (...) {
+	} catch (CInternetException *cie) {
+		LogInternetError(internet_session, "SendRequest", cie);
 		good_request = false;
+		cie->Delete();
 	}
 
 	if(!good_request)
@@ -441,6 +458,21 @@ CWnd *CComHemConnection::GetWindow() const
 	return m_parent_window;
 }
 
+
+void CComHemConnection::LogInternetError(const CInternetSession &internet_session,
+		const CString& operation, CInternetException *ie)
+{
+	DWORD extended_error;
+	internet_session.QueryOption(INTERNET_OPTION_EXTENDED_ERROR, extended_error);
+	CString errmess;
+	ie->GetErrorMessage(errmess.GetBuffer(1000), 1000);
+	errmess.ReleaseBuffer(); 
+	CString output;
+	output.Format(
+		"Error in %s: '%s' Extended error: %d",
+		operation, errmess, extended_error);
+	g_log.Log(errmess, CLog::LOG_ERROR);
+}
 
 void StartLoginThread(CWnd *parent)
 {

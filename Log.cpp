@@ -12,12 +12,19 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+const int CLog::LOG_DUMP = 50;
+const int CLog::LOG_INFO = 20;
+const int CLog::LOG_WARNING = 10;
+const int CLog::LOG_ERROR = 5;
+const int CLog::LOG_NONE = 0;
+
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
 CLog::CLog()
-: m_log_to_file(false)
+: m_log_to_file(false), m_loglevel(CLog::LOG_INFO)
 {
 
 }
@@ -25,6 +32,11 @@ CLog::CLog()
 CLog::~CLog()
 {
 
+}
+
+void CLog::SetLogLevel(int new_log_level)
+{
+	m_loglevel = new_log_level;
 }
 
 bool CLog::SetLogFile(const CString &filename)
@@ -67,8 +79,11 @@ bool CLog::SetLogFile(const CString &filename)
 }
 
 
-void CLog::Log(const CString &text)
+void CLog::Log(const CString &text, int log_level /* = LOG_INFO */)
 {
+	if(m_loglevel < log_level)
+		return;
+
 	CSingleLock lock(&m_mutex, true);
 
 	CTime now = CTime::GetCurrentTime();

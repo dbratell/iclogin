@@ -14,14 +14,23 @@ class CLog
 public:
 	CLog();
 	virtual ~CLog();
+	void SetLogLevel(int new_log_level);
 	bool SetLogFile(const CString &filename);
-	void Log(const CString &text);
+	void Log(const CString &text, int loglevel = CLog::LOG_INFO);
 
 	// Attributes
 private:
 	CStdioFile m_logfile;
 	bool m_log_to_file;
 	CMutex m_mutex;
+	int m_loglevel;
+
+public:
+	static const int LOG_DUMP;
+	static const int LOG_INFO;
+	static const int LOG_WARNING;
+	static const int LOG_ERROR;
+	static const int LOG_NONE;
 
 };
 

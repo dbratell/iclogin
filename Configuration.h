@@ -40,6 +40,8 @@ public:
 	static void SetLogToFile(bool do_it);
 	static const CString GetLogFile();
 	static void SetLogFile(const CString &filename);
+	static const int GetLogLevel();
+	static void SetLogLevel(int loglevel);
 
 	static void CleanRegistry();
 

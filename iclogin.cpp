@@ -13,7 +13,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const _TCHAR* const IC_VERSIONSTRING = _T("version 0.4.0");
+const _TCHAR* const IC_VERSIONSTRING = _T("version 0.4.1");
 const _TCHAR* const IC_APPURL = _T("http://www.lysator.liu.se/~bratell/iclogin/");
 
 /////////////////////////////////////////////////////////////////////////////
@@ -66,6 +66,7 @@ BOOL CIcloginApp::InitInstance()
 	//  of your final executable, you should remove from the following
 	//  the specific initialization routines you do not need.
 
+	g_log.SetLogLevel(CConfiguration::GetLogLevel());
 	if(CConfiguration::GetLogToFile())
 	{
 		g_log.SetLogFile(CConfiguration::GetLogFile());
