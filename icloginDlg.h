@@ -92,6 +92,8 @@ private:
 	void SetLoginStatus(int status);
 	void UpdateTimers();
 	void SetupLocalizedText();
+	CString GetLocalIpNumber();
+	void SetDialogTitle();
 
 // Attributes
 	UINT m_logintimer;

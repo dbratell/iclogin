@@ -82,8 +82,15 @@ LRESULT CTrayIcon::HandleMessage(WPARAM, LPARAM lparam)
 	switch(lparam)
 	{
 	case WM_LBUTTONDBLCLK:
-		m_wnd->ShowWindow(SW_SHOWNORMAL);
-		m_wnd->SetForegroundWindow();
+		if(m_wnd->ShowWindow(SW_SHOWNORMAL))
+		{
+			// The window was already visible. Let's hide it
+			m_wnd->ShowWindow(SW_HIDE);
+		}
+		else
+		{
+			m_wnd->SetForegroundWindow();
+		}
 
 		TRACE("(left)Doubleclick\n");
 		break;

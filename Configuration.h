@@ -42,6 +42,12 @@ public:
 	static void SetLogFile(const CString &filename);
 	static const int GetLogLevel();
 	static void SetLogLevel(int loglevel);
+#ifdef ICLOGIN_SERVICE
+	static void SetServiceName(const CString &name);
+	static const CString GetServiceName();
+	static void SetServiceLongName(const CString &name);
+	static const CString GetServiceLongName();
+#endif
 
 	static void CleanRegistry();
 

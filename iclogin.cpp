@@ -6,6 +6,7 @@
 #include "icloginDlg.h"
 #include "Configuration.h"
 #include "InstanceChecker.h"
+#include "ServiceMaster.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -13,8 +14,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const _TCHAR* const IC_VERSIONSTRING = _T("version 0.4.1");
+const _TCHAR* const IC_VERSIONSTRING = _T("version 0.5.0pre");
 const _TCHAR* const IC_APPURL = _T("http://www.lysator.liu.se/~bratell/iclogin/");
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginApp
@@ -55,6 +57,42 @@ BOOL CIcloginApp::InitInstance()
 		return FALSE;
 	}
 
+	g_log.SetLogLevel(CConfiguration::GetLogLevel());
+	if(CConfiguration::GetLogToFile())
+	{
+		g_log.SetLogFile(CConfiguration::GetLogFile());
+	}
+
+	g_log.Log("IC Login started");
+
+#ifdef ICLOGIN_SERVICE
+
+	if(IsWindowsNT())
+	{
+		CString commandline(m_lpCmdLine);
+		if(commandline == _T("-install"))
+		{
+			CServiceMaster::RemoveService();
+			CServiceMaster::InstallService();
+			return false;
+		}
+		else if(commandline == _T("-remove"))
+		{
+			CServiceMaster::RemoveService();
+			return false;
+		}
+		else if(commandline == _T("-service"))
+		{
+			g_log.Log("Run as service", CLog::LOG_DUMP);
+			StartAsService();
+			return false;
+	//		AfxMessageBox("Run as service!");
+		}
+	}
+
+#endif
+	
+
 	if (!AfxSocketInit())
 	{
 		AfxMessageBox(IDP_SOCKETS_INIT_FAILED);
@@ -65,14 +103,6 @@ BOOL CIcloginApp::InitInstance()
 	// If you are not using these features and wish to reduce the size
 	//  of your final executable, you should remove from the following
 	//  the specific initialization routines you do not need.
-
-	g_log.SetLogLevel(CConfiguration::GetLogLevel());
-	if(CConfiguration::GetLogToFile())
-	{
-		g_log.SetLogFile(CConfiguration::GetLogFile());
-	}
-
-	g_log.Log("IC Login started");
 
 #ifdef _AFXDLL
 	Enable3dControls();			// Call this when using MFC in a shared DLL
@@ -103,5 +133,61 @@ BOOL CIcloginApp::InitInstance()
 		return FALSE; // No window so we don't want to enter message loop
 	}
 }
+
+
+void CIcloginApp::StartAsService()
+{
+	g_log.Log("Entering StartAsService()", CLog::LOG_DUMP);
+	CServiceMaster::SetServiceFunctions();
+	g_log.Log("Leaving StartAsService()", CLog::LOG_DUMP);
+	return;
+}
+
+
+/**
+ * To see if there are such a thing as "services"
+ */
+bool IsWindowsNT()
+{
+	static bool cached = false;
+	static bool isnt;
+
+	if(!cached) 
+	{
+		OSVERSIONINFO osvi;
+		memset(&osvi, 0 , sizeof(osvi));
+		osvi.dwOSVersionInfoSize = sizeof (osvi);
+		if (! GetVersionEx ( (OSVERSIONINFO *) &osvi) ) 
+			 return false;
+
+		isnt = osvi.dwPlatformId == VER_PLATFORM_WIN32_NT;
+		cached = true;
+	}
+	return isnt;
+}
+
+/**
+ * If Windows 2000 (or better)
+ */
+bool IsWindows2000()
+{
+	static bool cached = false;
+	static bool is2000;
+
+	if(!cached) 
+	{
+		OSVERSIONINFO osvi;
+		memset(&osvi, 0 , sizeof(osvi));
+		osvi.dwOSVersionInfoSize = sizeof (osvi);
+		if (! GetVersionEx ( (OSVERSIONINFO *) &osvi) ) 
+			 return false;
+
+		is2000 = (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT &&
+			osvi.dwMajorVersion>=5);
+		cached = true;
+	}
+	return is2000;
+}
+
 
 

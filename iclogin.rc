@@ -37,7 +37,7 @@ STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION |
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "iclogin <loc>"
 MENU IDR_POPUP_MENU
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,148,22,50,14,NOT WS_VISIBLE
     PUSHBUTTON      "Login <loc>",IDC_LOGINBUTTON,7,3,50,14,0,0,
@@ -64,8 +64,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,4,1,0
- PRODUCTVERSION 0,4,1,0
+ FILEVERSION 0,5,0,0
+ PRODUCTVERSION 0,5,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -83,14 +83,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Daniel Bratell\0"
             VALUE "FileDescription", "IC Login\0"
-            VALUE "FileVersion", "0, 4, 1, 0\0"
+            VALUE "FileVersion", "0, 5, 0, 0\0"
             VALUE "InternalName", "iclogin\0"
             VALUE "LegalCopyright", "Copyright (C) 2000\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "iclogin.EXE\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "IC Login\0"
-            VALUE "ProductVersion", "0.4.0\0"
+            VALUE "ProductVersion", "0.5.0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -153,10 +153,10 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
-    IDS_LOGINSTARTED        "Login started..."
+    IDS_LOGINSTARTED        "Login attempt started..."
     IDS_LOGINFAILED         "Login failed!"
     IDS_LOGINSUCCEEDED      "You are logged in!"
-    IDS_LOGOUTSTARTED       "Logout started..."
+    IDS_LOGOUTSTARTED       "Logout attempt started..."
     IDS_LOGOUTFAILED        "Logout failed!"
     IDS_LOGOUTSUCCEEDED     "You are logged out!"
     IDS_LOGINALREADYLOGIN   "You are still logged in."
@@ -225,6 +225,7 @@ BEGIN
     IDS_AUTOSTARTTOOLTIP    "Start up IC Login when starting the computer."
     IDS_LOGTOFILE           "Create log on file"
     IDS_LOGTOFILETOOLTIP    "Write events in "
+    IDS_CREDITS             "Thanks to Jonas Svensson, Andréas Bratell, Marcus Comstedt, !Calle Englund and Sofia Max!"
 END
 
 #endif    // English (U.S.) resources
@@ -286,6 +287,7 @@ BEGIN
     LTEXT           "Copyright (c) 2000 Daniel Bratell",IDC_STATIC,44,57,102,
                     8
     PUSHBUTTON      "the url",IDC_APPURL,22,71,153,14,BS_FLAT
+    LTEXT           "<scroll>",IDC_SCROLLTEXT,25,89,116,14
 END
 
 
@@ -385,6 +387,9 @@ IDI_SAD                 ICON    DISCARDABLE     "res\\sad.ico"
 IDI_QUESTIONICON        ICON    DISCARDABLE     "res\\question.ico"
 IDI_TRAYPLUS            ICON    DISCARDABLE     "res\\trayplus.ico"
 IDI_TRAYMINUS           ICON    DISCARDABLE     "res\\trayminu.ico"
+IDI_ICON1               ICON    DISCARDABLE     "res\\icon1.ico"
+IDI_ICON2               ICON    DISCARDABLE     "res\\LProgikon.ico"
+IDI_ICON3               ICON    DISCARDABLE     "res\\Sprogikon.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -27,6 +27,10 @@ const _TCHAR* const AUTOSTARTKEY = _T("AutoStart");
 const _TCHAR* const LOGTOFILEKEY = _T("LogToFile");
 const _TCHAR* const LOGFILEKEY = _T("LogFile");
 const _TCHAR* const LOGLEVELKEY = _T("LogLevel");
+#ifdef ICLOGIN_SERVICE
+const _TCHAR* const SERVICENAMEKEY = _T("ServiceName");
+const _TCHAR* const SERVICEDISPLAYNAMEKEY = _T("ServiceDisplayName");
+#endif
 
 const _TCHAR* const PROGRAMNAMEINRUN = _T("IC Login");
 
@@ -66,8 +70,10 @@ void  CConfiguration::CleanRegistry()
 			// in that case.
 
 			CString dummy;
-			if(RegEnumKey(regkey2, 0, dummy.GetBuffer(MAX_PATH+1), MAX_PATH+1) == 
-				ERROR_NO_MORE_ITEMS)
+			bool rv = RegEnumKey(regkey2, 0, dummy.GetBuffer(MAX_PATH+1), MAX_PATH+1) == 
+				ERROR_NO_MORE_ITEMS;
+			dummy.ReleaseBuffer();
+			if(rv)
 			{
 				if(regkey2.Close() == ERROR_SUCCESS)
 				{
@@ -193,7 +199,6 @@ void CConfiguration::SetLoginAtStartup(const bool do_it)
 const CString CConfiguration::GetUsername()
 {
 	return GetStringData(USERNAMEKEY, _T(""));
-	// return "u13305151";
 }
 
 
@@ -206,7 +211,6 @@ void CConfiguration::SetUsername(const CString &name)
 const CString CConfiguration::GetPassword()
 {
 	return GetStringData(PASSWORDKEY, _T(""));
-// 	return "Hv6YcfJD"; // password XXX (should be encoded)
 }
 
 
@@ -267,6 +271,31 @@ void CConfiguration::SetLogLevel(int loglevel)
 	SetIntData(LOGLEVELKEY, loglevel);
 }
 
+#ifdef ICLOGIN_SERVICE
+const CString CConfiguration::GetServiceName()
+{
+	return GetStringData(SERVICENAMEKEY, _T("IC Login Service"));
+}
+
+
+void CConfiguration::SetServiceName(const CString &name)
+{
+	SetStringData(SERVICENAMEKEY, name);
+}
+
+
+const CString CConfiguration::GetServiceLongName()
+{
+	return GetStringData(SERVICEDISPLAYNAMEKEY, _T("IC Login Service"));
+}
+
+
+void CConfiguration::SetServiceLongName(const CString &name)
+{
+	SetStringData(SERVICEDISPLAYNAMEKEY, name);
+}
+
+#endif // ICLOGIN_SERVICE
 
 const bool CConfiguration::GetAutoStart()
 {
@@ -294,7 +323,9 @@ void CConfiguration::SetAutoStart(const bool do_it)
 						if(do_it)
 						{
 							CString ourpath;
-							if(GetModuleFileName(NULL, ourpath.GetBuffer(1000), 1000))
+							BOOL rv = GetModuleFileName(NULL, ourpath.GetBuffer(1000), 1000);
+							ourpath.ReleaseBuffer();
+							if(rv)
 							{
 								regkey5.SetValue(ourpath, PROGRAMNAMEINRUN);
 							}
@@ -319,13 +350,13 @@ int CConfiguration::GetIntData(const CString& key, int default_data)
 {
 	int rv = default_data; // Default;
 	CRegKey regkey1;
-	if(regkey1.Create(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
+	if(regkey1.Open(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
-		if(regkey2.Create(regkey1, COMPANYKEY) == ERROR_SUCCESS)
+		if(regkey2.Open(regkey1, COMPANYKEY) == ERROR_SUCCESS)
 		{
 			CRegKey regkey3;
-			if(regkey3.Create(regkey2, APPKEY) == ERROR_SUCCESS)
+			if(regkey3.Open(regkey2, APPKEY) == ERROR_SUCCESS)
 			{
 				DWORD data_in_reg;
 				if(regkey3.QueryValue(data_in_reg, key) == ERROR_SUCCESS)
@@ -366,13 +397,13 @@ CString CConfiguration::GetStringData(const CString& key, const CString& default
 {
 	CString rv = default_data; // Default;
 	CRegKey regkey1;
-	if(regkey1.Create(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
+	if(regkey1.Open(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
-		if(regkey2.Create(regkey1, COMPANYKEY) == ERROR_SUCCESS)
+		if(regkey2.Open(regkey1, COMPANYKEY) == ERROR_SUCCESS)
 		{
 			CRegKey regkey3;
-			if(regkey3.Create(regkey2, APPKEY) == ERROR_SUCCESS)
+			if(regkey3.Open(regkey2, APPKEY) == ERROR_SUCCESS)
 			{
 				DWORD data_size;
 				if(regkey3.QueryValue(NULL, key, &data_size) == ERROR_SUCCESS)
@@ -380,6 +411,7 @@ CString CConfiguration::GetStringData(const CString& key, const CString& default
 					if(data_size > 0)
 					{
 						regkey3.QueryValue(rv.GetBuffer(data_size), key, &data_size);
+						rv.ReleaseBuffer();
 					}
 				}
 			}

@@ -121,10 +121,22 @@ void CIcloginDlg::SetupLocalizedText()
 	m_messagetext.SetWindowText(_T(""));
 	m_messagetext2.SetWindowText(_T(""));
 
+	SetDialogTitle();
+}
+
+void CIcloginDlg::SetDialogTitle() 
+{
 	CString window_title;
 	window_title.LoadString(IDS_DIALOGTITLE);
+	CString ip = GetLocalIpNumber();
+	if(!ip.IsEmpty())
+	{
+		window_title += _T(" - ");
+		window_title += ip;
+	}
 	SetWindowText(window_title);
 }
+
 
 // If you add a minimize button to your dialog, you will need the code below
 //  to draw the icon.  For MFC applications using the document/view model,
@@ -547,6 +559,9 @@ void CIcloginDlg::SetLoginStatus(int status)
 	UpdateTimers(); // before updating status
 
 	m_currentstatus = status;
+
+	// Display new IP-number
+	SetDialogTitle();
 }
 
 
@@ -694,9 +709,12 @@ BOOL CIcloginDlg::Create(CWnd *pParentWnd /*= NULL */)
 	m_trayicon.Init(this);
 	
 	if(CConfiguration::GetLoginAtStartup() && !CConfiguration::GetUsername().IsEmpty())
+	{
 		StartLoginThread(this);
+	}
 
 	SetupLoginTimer();
+
 	m_updatetimer = SetTimer(UPDATETIMER, 
 			CConfiguration::GetUpdateTimersInterval()*1000, 
 			NULL);
@@ -712,4 +730,104 @@ void CIcloginDlg::OnOK()
 	TRACE("OnOK\n");
 	m_oktoclose = true;
 	DestroyWindow();
+}
+
+
+CString CIcloginDlg::GetLocalIpNumber()
+{
+	char szHostName[128];
+
+	BOOL bPrivateAdr = false; 
+	// Private Address area 
+	BOOL bClassA = false;     
+	// Class A definition 
+	BOOL bClassB = false;     
+	// Class B definition 
+	BOOL bClassC = false;     
+	// Class C definition 
+	BOOL bAutoNet = false;    
+	// AutoNet definition 
+	CString str;
+	WORD wVersionRequested = MAKEWORD( 1, 1 );
+	WSADATA wsaData;
+
+	WSAStartup(wVersionRequested,  &wsaData);
+
+	if(!gethostname(szHostName, sizeof(szHostName)))
+	{
+		// Get host adresses 
+		struct hostent * pHost;
+		int i;
+		UINT ipb;
+		pHost = gethostbyname(szHostName); 
+
+		for(i = 0; 
+	       pHost!= NULL && pHost->h_addr_list[i]!= NULL; 
+		   i++ )
+		{
+			int j;
+			str="";
+			bClassA = bClassB = bClassC = false;
+			for( j = 0; j < pHost->h_length; j++ )
+			{
+				CString addr;
+
+				if( j > 0 )	str += ".";
+				ipb = (unsigned int)((unsigned char*)pHost->h_addr_list[i])[j];
+
+				// Define the IP range for exclusion 
+				if(j==0)
+				{
+					bClassA = (ipb == 10);
+					if(bClassA) break; // Class A defined 
+					bClassB = (ipb == 172); 
+					bClassC = (ipb == 192);
+					bAutoNet = (ipb == 169);
+				}
+				else if (j==1)
+				{
+					// Class B defined 
+					bClassB = (bClassB && ipb >= 16 && ipb <= 31);
+					if(bClassB) break;
+
+					// Class C defined 
+					bClassC = (bClassC && ipb == 168);
+					if(bClassC) break;
+
+					//AutoNet pasibility defined 
+					bAutoNet = (bAutoNet && ipb == 254);
+					if(bAutoNet) break;
+				}
+
+				addr.Format("%u", ipb );
+				str += addr;
+			}
+			// If any address of Private Address  
+			// area has been found bPrivateAdr = true 
+			bPrivateAdr = bPrivateAdr || bClassA || bClassB || bClassC;
+
+			// If any address of Internet Address area  
+			// has been found returns TRUE 
+			if (!bClassA && !bClassB && !bClassC && !bAutoNet && 
+				str != "127.0.0.1" && !str.IsEmpty()) 
+			{
+				WSACleanup();
+				return str;
+			}
+		}
+	}
+
+	if (bPrivateAdr)
+	{
+		// The system has IP address from Private Address 
+		// area,only. Internet from the computer can be accessable 
+		// via Proxy. If user turn on proxy connection flag, the 
+		// function believe Internet accessable. 
+		// return bProxyConnection;
+		WSACleanup();
+		return "";
+	}
+ 
+ 	WSACleanup();
+	return "";
 }

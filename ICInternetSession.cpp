@@ -22,19 +22,12 @@ const _TCHAR* const USERAGENT = "Mozilla/4.75+[en]+(Windows+NT+5.0;+U)";
 CICInternetSession::CICInternetSession(CWnd *parent)
 : CInternetSession(USERAGENT), m_wnd(parent)
 {
-/*	DWORD value;
-	QueryOption(INTERNET_OPTION_SEND_TIMEOUT, value);
-	QueryOption(INTERNET_OPTION_RECEIVE_TIMEOUT, value);
-	QueryOption(INTERNET_OPTION_EXTENDED_ERROR, value);
-	QueryOption(INTERNET_OPTION_CONNECT_TIMEOUT, value);
-	QueryOption(INTERNET_OPTION_SEND_TIMEOUT, value);
-*/
 	EnableStatusCallback();
 }
 
 CICInternetSession::~CICInternetSession()
 {
-
+	Close();
 }
 
 void CICInternetSession::OnStatusCallback( DWORD dwContext, DWORD dwInternetStatus, LPVOID lpvStatusInformation, DWORD dwStatusInformationLength )

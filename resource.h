@@ -52,8 +52,11 @@
 #define IDI_TRAYMINUS                   140
 #define IDS_CLEANREGISTRYBUTTON         140
 #define IDS_CLEANREGISTRYINFORMATION    141
+#define IDI_ICON1                       141
 #define IDS_NOUSERORPASSWORD            142
+#define IDI_ICON2                       142
 #define IDS_USERNAMEFIELDTOOLTIP        143
+#define IDI_ICON3                       143
 #define IDS_PASSWORDFIELDTOOLTIP        144
 #define IDS_HIDEPASSWORDTOOLTIP         145
 #define IDS_LOGINATSTARTUPCHECKBOXTOOLTIP 146
@@ -67,6 +70,7 @@
 #define IDS_AUTOSTARTTOOLTIP            154
 #define IDS_LOGTOFILE                   155
 #define IDS_LOGTOFILETOOLTIP            156
+#define IDS_CREDITS                     157
 #define IDC_LOGINBUTTON                 1000
 #define IDC_LOGOUTBUTTON                1001
 #define IDC_MESSAGETEXT                 1002
@@ -90,15 +94,16 @@
 #define IDC_AUTOSTART                   1020
 #define IDC_LOGTOFILE                   1021
 #define IDC_APPURL                      1023
+#define IDC_SCROLLTEXT                  1024
 #define IDC_ABOUT                       32776
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        141
+#define _APS_NEXT_RESOURCE_VALUE        144
 #define _APS_NEXT_COMMAND_VALUE         32780
-#define _APS_NEXT_CONTROL_VALUE         1024
+#define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

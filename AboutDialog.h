@@ -19,6 +19,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CAboutDialog)
 	enum { IDD = IDD_ABOUTDIALOG };
+	CStatic	m_scrolltext;
 	CButton	m_appurl;
 	CStatic	m_versionlabel;
 	//}}AFX_DATA
@@ -38,8 +39,19 @@ protected:
 	//{{AFX_MSG(CAboutDialog)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnAppurl();
+	afx_msg void OnDestroy();
+	afx_msg void OnTimer(UINT nIDEvent);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+	// Attributes
+private:
+	CString m_credits;
+	int m_scrolloffset;
+
+	// Implementation
+private:
+	void SetScrollText();
+
 };
 
 //{{AFX_INSERT_LOCATION}}

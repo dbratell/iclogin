@@ -15,6 +15,9 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+
+// #define TRACE_ALL_OUTPUT
+
 #define LOGIN_METHOD_UNKNOWN 0
 #define LOGIN_METHOD_OLD 1
 #define LOGIN_METHOD_NEW 2
@@ -115,7 +118,6 @@ bool CComHemConnection::Is_loggined() const
 		}
 	} catch (CInternetException *cie) {cie->Delete(); } 
 
-	internet_session.Close();
 	return return_value;
 }
 
@@ -153,7 +155,6 @@ bool CComHemConnection::Login() const
 			}
 		} catch (CInternetException *cie) {
 			m_parent_window->PostMessage(IC_LOGINFAILED);
-			internet_session.Close();
 			cie->Delete();
 			return false;
 		} 
@@ -166,7 +167,6 @@ bool CComHemConnection::Login() const
 		if(!LoginOldWay(internet_session))
 		{
 			m_parent_window->PostMessage(IC_LOGINFAILED);
-			internet_session.Close();
 			return false;
 		}
 	}
@@ -175,7 +175,6 @@ bool CComHemConnection::Login() const
 		if(!LoginNewWay(internet_session))
 		{
 			m_parent_window->PostMessage(IC_LOGINFAILED);
-			internet_session.Close();
 			return false;
 		}
 	}
@@ -187,7 +186,6 @@ bool CComHemConnection::Login() const
 			if(!LoginNewWay(internet_session))
 			{
 				m_parent_window->PostMessage(IC_LOGINFAILED);
-				internet_session.Close();
 				return false;
 			}
 			else
@@ -204,8 +202,6 @@ bool CComHemConnection::Login() const
 	{
 		ASSERT(false); // What the...
 	}
-
-	internet_session.Close();
 
 	m_parent_window->PostMessage(IC_LOGINSUCCEEDED);
 	return true;
@@ -278,21 +274,55 @@ bool CComHemConnection::LoginNewWay(CInternetSession &internet_session)
 
 
 
+// Messy!
 bool CComHemConnection::Logout() const
 {
 	g_log.Log("Loggin out.");
 
+	int login_method = m_login_method; // Copy to avoid race conditions
+
 	m_parent_window->PostMessage(IC_LOGOUTSTARTED);
 	CICInternetSession internet_session(m_parent_window);
-	try {
-		VisitUrl(internet_session, "login1.telia.com", "/logout.php3?logout=1");
-	} catch (CInternetException *cie) {
-		m_parent_window->PostMessage(IC_LOGOUTFAILED);
-		internet_session.Close();
-		cie->Delete();
-		return false;
+
+	if(login_method == LOGIN_METHOD_OLD)
+	{
+		try {
+			VisitUrl(internet_session, "login1.telia.com", "/logout.php3?logout=1");
+		} catch (CInternetException *cie) {
+			m_parent_window->PostMessage(IC_LOGOUTFAILED);
+			cie->Delete();
+			return false;
+		}
 	}
-	internet_session.Close();
+	else if(login_method == LOGIN_METHOD_NEW)
+	{
+		try {
+			VisitUrl(internet_session, "login1.telia.com", "/sd/logout?logout=1");
+		} catch (CInternetException *cie) {
+			m_parent_window->PostMessage(IC_LOGOUTFAILED);
+			cie->Delete();
+			return false;
+		}
+	}
+	else // login_method == LOGIN_METHOD_UNKNOWN
+	{
+		try {
+			VisitUrl(internet_session, "login1.telia.com", "/logout.php3?logout=1");
+		} catch (CInternetException *oldcie) {
+			oldcie->Delete();
+			try {
+				VisitUrl(internet_session, "login1.telia.com", "/sd/logout?logout=1");
+			} catch (CInternetException *newcie) {
+				m_parent_window->PostMessage(IC_LOGOUTFAILED);
+				newcie->Delete();
+				return false;
+			}
+			m_login_method = LOGIN_METHOD_NEW;
+			m_parent_window->PostMessage(IC_LOGOUTSUCCEEDED);
+			return true;
+		}
+		m_login_method = LOGIN_METHOD_OLD;
+	}
 
 	m_parent_window->PostMessage(IC_LOGOUTSUCCEEDED);
 	return true;
@@ -349,14 +379,29 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 		throw;
 	}
 
+	DWORD statuscode;
+	http_file->QueryInfoStatusCode(statuscode);
+	if(statuscode<200 || 299 < statuscode)
+	{
+		CString err;
+		err.Format("Got status code %d from server. That's not good.", 
+			statuscode);
+		g_log.Log(err, CLog::LOG_INFO);
+		http_file->Abort();
+		http_connection->Close();
+		throw new CInternetException(1);
+	}
+
 	try {
 		CString line;
 		while(http_file->ReadString(line))
 		{
 			data += line;
 			line += '\n';
-			// TRACE(data);
-			// TRACE("\n");
+#ifdef TRACE_ALL_OUTPUT
+			TRACE(line);
+			TRACE("\n");
+#endif
 		}
 	} catch (CInternetException *cie) {
 		LogInternetError(internet_session, "ReadString", cie);
@@ -421,35 +466,53 @@ bool CComHemConnection::PostLogin(CInternetSession &internet_session,
 		return false;
 	} 
 	
-	bool good_request = true;
 	try {
-		good_request = (http_file->SendRequest(strHeaders, strHeaders.GetLength(), (LPVOID)(LPCTSTR)postdata, postdata.GetLength()) == TRUE);
-		char buffer[4000];
-		while(http_file->Read(buffer, sizeof(buffer)))
-		{
-//			TRACE(buffer);
-	//		TRACE(data);
-	//		TRACE("\n");
-		}
+		TRACE1("Sending data: %s\n", postdata);
+		http_file->SendRequest(strHeaders, strHeaders.GetLength(), (LPVOID)(LPCTSTR)postdata, postdata.GetLength());
 	} catch (CInternetException *cie) {
 		LogInternetError(internet_session, "SendRequest", cie);
-		good_request = false;
+		http_file->Abort();
+		http_connection->Close();
+		cie->Delete();
+		return false;
+	}
+
+	DWORD statuscode;
+	http_file->QueryInfoStatusCode(statuscode);
+	if(statuscode<200 || 299 < statuscode)
+	{
+		CString err;
+		err.Format("Got status code %d from server. That's not good.", 
+			statuscode);
+		g_log.Log(err, CLog::LOG_INFO);
+		http_file->Abort();
+		http_connection->Close();
+		return false;
+	}
+
+	try {
+		CString line;
+		while(http_file->ReadString(line))
+		{
+#ifdef TRACE_ALL_OUTPUT
+			TRACE(line);
+			TRACE("\n");
+#endif
+		}
+	} catch (CInternetException *cie) {
+		LogInternetError(internet_session, "Read", cie);
+		http_file->Abort();
+		http_connection->Close();
 		cie->Delete();
 	}
 
-	if(!good_request)
-	{
-		http_file->Abort();
-	}
-	else
-	{
+	try {
 		http_file->Close();
-	}
+	} catch(CInternetException *cie) { delete cie; }
 
 	http_connection->Close();
 
-	return good_request;
-
+	return true;
 }
 
 
@@ -467,11 +530,12 @@ void CComHemConnection::LogInternetError(const CInternetSession &internet_sessio
 	CString errmess;
 	ie->GetErrorMessage(errmess.GetBuffer(1000), 1000);
 	errmess.ReleaseBuffer(); 
+	errmess.TrimRight();
 	CString output;
 	output.Format(
 		"Error in %s: '%s' Extended error: %d",
 		operation, errmess, extended_error);
-	g_log.Log(errmess, CLog::LOG_ERROR);
+	g_log.Log(output, CLog::LOG_ERROR);
 }
 
 void StartLoginThread(CWnd *parent)

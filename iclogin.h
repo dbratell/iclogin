@@ -12,6 +12,9 @@
 	#error include 'stdafx.h' before including this file for PCH
 #endif
 
+#define ICLOGIN_SERVICE
+
+
 #include "resource.h"		// main symbols
 #include "Log.h"
 
@@ -43,6 +46,8 @@ public:
 		//    DO NOT EDIT what you see in these blocks of generated code !
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+	void StartAsService();
+
 };
 
 
@@ -50,5 +55,10 @@ public:
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+#ifdef ICLOGIN_SERVICE
+bool IsWindowsNT();
+bool IsWindows2000();
+#endif
 
 #endif // !defined(AFX_ICLOGIN_H__36C2C509_4A53_4078_BAA7_ACF3347747C1__INCLUDED_)

@@ -69,7 +69,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR /Yu"stdafx.h" /FD /GZ /c
+# ADD CPP /nologo /MDd /W4 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR /Yu"stdafx.h" /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x41d /d "_DEBUG" /d "_AFXDLL"
@@ -96,7 +96,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W4 /GX /Zi /O1 /Oy /Ob2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FAs /FR /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /Gd /MD /W4 /GX /Zi /Od /Oy /Ob2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /D "AGG_OPT" /FAs /FR /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MD /W4 /GX /Zi /Od /Oy /Ob2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /D "AGG_OPT" /FAs /FR /Yu"stdafx.h" /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x41d /d "NDEBUG" /d "_AFXDLL"
@@ -107,6 +107,11 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /debug /machine:I386
 # ADD LINK32 /nologo /subsystem:windows /debug /machine:I386
+# Begin Special Build Tool
+SOURCE="$(InputPath)"
+PostBuild_Desc=Compress binary
+PostBuild_Cmds=upx -9 -f -v Minimal\iclogin.exe
+# End Special Build Tool
 
 !ENDIF 
 
@@ -157,6 +162,10 @@ SOURCE=.\InstanceChecker.cpp
 # Begin Source File
 
 SOURCE=.\Log.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ServiceMaster.cpp
 # End Source File
 # Begin Source File
 
@@ -217,6 +226,10 @@ SOURCE=.\Resource.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ServiceMaster.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.h
 # End Source File
 # Begin Source File
@@ -245,11 +258,19 @@ SOURCE=.\res\icon1.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\LProgikon.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\question.ico
 # End Source File
 # Begin Source File
 
 SOURCE=.\res\sad.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\Sprogikon.ico
 # End Source File
 # Begin Source File
 
