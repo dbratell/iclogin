@@ -64,8 +64,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,5,9,9
- PRODUCTVERSION 0,5,9,9
+ FILEVERSION 0,6,0,0
+ PRODUCTVERSION 0,6,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -83,14 +83,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Daniel Bratell\0"
             VALUE "FileDescription", "IC Login\0"
-            VALUE "FileVersion", "0, 6pre\0"
+            VALUE "FileVersion", "0.6\0"
             VALUE "InternalName", "iclogin\0"
             VALUE "LegalCopyright", "Copyright (C) 2000\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "iclogin.EXE\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "IC Login\0"
-            VALUE "ProductVersion", "0.6prebeta\0"
+            VALUE "ProductVersion", "0.6\0"
             VALUE "SpecialBuild", "\0"
         END
     END
