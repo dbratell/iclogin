@@ -19,6 +19,9 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CConfigurationDialog)
 	enum { IDD = IDD_CONFIGURATION };
+	CButton	m_logtofile;
+	CButton	m_autostart;
+	CButton	m_cleanregistrybutton;
 	CButton	m_starthidden;
 	CStatic	m_loginatintervalunit;
 	CEdit	m_loginatintervalfield;
@@ -48,6 +51,8 @@ protected:
 	afx_msg void OnHidepassword();
 	virtual void OnOK();
 	afx_msg void OnKillfocusLoginintervalfield();
+	afx_msg void OnCleanregistrybutton();
+	afx_msg BOOL OnToolTipNotify(UINT id, NMHDR *pNMHDR, LRESULT *pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

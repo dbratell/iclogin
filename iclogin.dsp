@@ -126,6 +126,10 @@ SOURCE=.\icloginDlg.cpp
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
+# Begin Source File
+
+SOURCE=.\TrayIcon.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -170,6 +174,10 @@ SOURCE=.\Resource.h
 
 SOURCE=.\StdAfx.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\TrayIcon.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
@@ -188,6 +196,10 @@ SOURCE=.\res\iclogin.rc2
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\icon1.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\question.ico
 # End Source File
 # Begin Source File
@@ -197,6 +209,14 @@ SOURCE=.\res\sad.ico
 # Begin Source File
 
 SOURCE=.\res\trayicon.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\trayminu.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\trayplus.ico
 # End Source File
 # End Group
 # Begin Source File

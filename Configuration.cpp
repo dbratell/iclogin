@@ -23,6 +23,14 @@ const char* const LOGINATSTARTUPKEY = _T("LoginAtStartup");
 const char* const HIDEPASSWORDKEY = _T("HidePassword");
 const char* const STARTHIDDENKEY = _T("StartHidden");
 const char* const ISCONFIGUREDKEY = _T("IsConfigured");
+const char* const AUTOSTARTKEY = _T("AutoStart");
+const char* const LOGTOFILEKEY = _T("LogToFile");
+const char* const LOGFILEKEY = _T("LogFile");
+
+const char* const PROGRAMNAMEINRUN = _T("IC Login");
+
+const char* const COMPANYKEY = _T("Bratell");
+const char* const APPKEY = _T("IC Login");
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -36,6 +44,35 @@ CConfiguration::CConfiguration()
 CConfiguration::~CConfiguration()
 {
 
+}
+
+
+void  CConfiguration::CleanRegistry()
+{
+	SetAutoStart(false); // To remove us from the Run key.
+
+	CRegKey regkey1;
+	if(regkey1.Create(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
+	{
+		CRegKey regkey2;
+		if(regkey2.Create(regkey1, COMPANYKEY) == ERROR_SUCCESS)
+		{
+			regkey2.RecurseDeleteKey(APPKEY);
+			// Should check if COMPANYKEY is empty and delete it too
+			// in that case.
+
+			_TCHAR buffer[MAX_PATH+1];
+			if(RegEnumKey(regkey2, 0, buffer, MAX_PATH+1) == 
+				ERROR_NO_MORE_ITEMS)
+			{
+				if(regkey2.Close() == ERROR_SUCCESS)
+				{
+					// Delete the COMPANYKEY too
+					regkey1.DeleteSubKey(COMPANYKEY);
+				}
+			}
+		}
+	}
 }
 
 
@@ -190,6 +227,79 @@ void CConfiguration::SetHidePassword(const bool do_it)
 		SetIntData(HIDEPASSWORDKEY, 0);
 }
 
+const bool CConfiguration::GetLogToFile()
+{
+	return (GetIntData(LOGTOFILEKEY, 0) != 0);
+}
+
+
+void CConfiguration::SetLogToFile(const bool do_it)
+{
+	if(do_it)
+		SetIntData(LOGTOFILEKEY, 1);
+	else
+		SetIntData(LOGTOFILEKEY, 0);
+}
+
+
+const CString CConfiguration::GetLogFile()
+{
+	return GetStringData(LOGFILEKEY, _T("iclogin.log"));
+}
+
+
+void CConfiguration::SetLogFile(const CString &filename)
+{
+	SetStringData(LOGFILEKEY, filename);
+}
+
+
+const bool CConfiguration::GetAutoStart()
+{
+	// Could also check the run key.
+	return (GetIntData(AUTOSTARTKEY, 0) != 0);
+}
+
+void CConfiguration::SetAutoStart(const bool do_it)
+{
+	CRegKey regkey1;
+	if(regkey1.Create(HKEY_CURRENT_USER, _T("Software")) == ERROR_SUCCESS)
+	{
+		CRegKey regkey2;
+		if(regkey2.Create(regkey1, _T("Microsoft")) == ERROR_SUCCESS)
+		{
+			CRegKey regkey3;
+			if(regkey3.Create(regkey2, _T("Windows")) == ERROR_SUCCESS)
+				{
+				CRegKey regkey4;
+				if(regkey4.Create(regkey3, _T("CurrentVersion")) == ERROR_SUCCESS)
+				{
+					CRegKey regkey5;
+					if(regkey5.Create(regkey4, _T("Run")) == ERROR_SUCCESS)
+					{
+						if(do_it)
+						{
+							_TCHAR buffer[1000];
+							if(GetModuleFileName(NULL, buffer, 1000))
+							{
+								CString ourpath(buffer);
+								regkey5.SetValue(ourpath, PROGRAMNAMEINRUN);
+							}
+
+							SetIntData(AUTOSTARTKEY, 1);
+						}
+						else
+						{
+							SetIntData(AUTOSTARTKEY, 0);
+							regkey5.DeleteValue(PROGRAMNAMEINRUN);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 
 
 int CConfiguration::GetIntData(const CString& key, int default_data)
@@ -199,10 +309,10 @@ int CConfiguration::GetIntData(const CString& key, int default_data)
 	if(regkey1.Create(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
-		if(regkey2.Create(regkey1, _T("Bratell")) == ERROR_SUCCESS)
+		if(regkey2.Create(regkey1, COMPANYKEY) == ERROR_SUCCESS)
 		{
 			CRegKey regkey3;
-			if(regkey3.Create(regkey2, _T("IC Login")) == ERROR_SUCCESS)
+			if(regkey3.Create(regkey2, APPKEY) == ERROR_SUCCESS)
 			{
 				DWORD data_in_reg;
 				if(regkey3.QueryValue(data_in_reg, key) == ERROR_SUCCESS)
@@ -223,10 +333,10 @@ void CConfiguration::SetIntData(const CString& key, int value)
 	if(regkey1.Create(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
-		if(regkey2.Create(regkey1, _T("Bratell")) == ERROR_SUCCESS)
+		if(regkey2.Create(regkey1, COMPANYKEY) == ERROR_SUCCESS)
 		{
 			CRegKey regkey3;
-			if(regkey3.Create(regkey2, _T("IC Login")) == ERROR_SUCCESS)
+			if(regkey3.Create(regkey2, APPKEY) == ERROR_SUCCESS)
 			{
 				if(regkey3.SetValue(value, key) != ERROR_SUCCESS)
 				{
@@ -246,10 +356,10 @@ CString CConfiguration::GetStringData(const CString& key, const CString& default
 	if(regkey1.Create(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
-		if(regkey2.Create(regkey1, _T("Bratell")) == ERROR_SUCCESS)
+		if(regkey2.Create(regkey1, COMPANYKEY) == ERROR_SUCCESS)
 		{
 			CRegKey regkey3;
-			if(regkey3.Create(regkey2, _T("IC Login")) == ERROR_SUCCESS)
+			if(regkey3.Create(regkey2, APPKEY) == ERROR_SUCCESS)
 			{
 				DWORD data_size;
 				if(regkey3.QueryValue(NULL, key, &data_size) == ERROR_SUCCESS)
@@ -279,10 +389,10 @@ void CConfiguration::SetStringData(const CString& key, const CString& value)
 	if(regkey1.Create(HKEY_LOCAL_MACHINE, _T("Software")) == ERROR_SUCCESS)
 	{
 		CRegKey regkey2;
-		if(regkey2.Create(regkey1, _T("Bratell")) == ERROR_SUCCESS)
+		if(regkey2.Create(regkey1, COMPANYKEY) == ERROR_SUCCESS)
 		{
 			CRegKey regkey3;
-			if(regkey3.Create(regkey2, _T("IC Login")) == ERROR_SUCCESS)
+			if(regkey3.Create(regkey2, APPKEY) == ERROR_SUCCESS)
 			{
 				if(regkey3.SetValue(value, key) != ERROR_SUCCESS)
 				{

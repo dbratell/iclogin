@@ -13,8 +13,10 @@
 #endif
 
 #include "resource.h"		// main symbols
+#include "Log.h"
 
 extern const char* const IC_VERSIONSTRING;
+extern CLog g_log;
 
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginApp:

@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "iclogin.h"
 #include "icloginDlg.h"
+#include "Configuration.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -11,7 +12,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-const char* const IC_VERSIONSTRING = "version 0.3.2";
+const char* const IC_VERSIONSTRING = "version 0.3.3";
 
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginApp
@@ -26,6 +27,8 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CIcloginApp construction
+
+CLog g_log;
 
 CIcloginApp::CIcloginApp()
 {
@@ -54,11 +57,19 @@ BOOL CIcloginApp::InitInstance()
 	//  of your final executable, you should remove from the following
 	//  the specific initialization routines you do not need.
 
+	if(CConfiguration::GetLogToFile())
+	{
+		g_log.SetLogFile(CConfiguration::GetLogFile());
+	}
+
+	g_log.Log("IC Login started");
+
 #ifdef _AFXDLL
 	Enable3dControls();			// Call this when using MFC in a shared DLL
 #else
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
+	
 	CIcloginDlg dlg;
 	m_pMainWnd = &dlg;
 
@@ -73,6 +84,8 @@ BOOL CIcloginApp::InitInstance()
 		// TODO: Place code here to handle when the dialog is
 		//  dismissed with Cancel
 	}
+
+	g_log.Log("IC Login exited");
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.

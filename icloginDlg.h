@@ -86,7 +86,7 @@ private:
 	void SetLoginStatus(int status);
 	BOOL FindAnotherInstance();
 	void UpdateTimers();
-
+	void SetupLocalizedText();
 
 // Attributes
 	UINT m_logintimer;

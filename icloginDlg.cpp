@@ -30,7 +30,6 @@ CIcloginDlg::CIcloginDlg(CWnd* pParent /*=NULL*/)
 	m_logintimer(0), m_loggedintimespan(0), m_loggedouttimespan(0), 
 	m_failedlastlogin(false), m_startingup(true), m_currentstatus(0),
 	m_expectedstatus(0), m_everlogin(false), m_everlogout(false)
-
 {
 	//{{AFX_DATA_INIT(CIcloginDlg)
 		// NOTE: the ClassWizard will add member initialization here
@@ -87,9 +86,9 @@ BEGIN_MESSAGE_MAP(CIcloginDlg, CDialog)
 	ON_WM_SIZE()
 	ON_REGISTERED_MESSAGE(g_common_message, OnCommonMessage)
 	ON_COMMAND(IDC_ABOUT, OnAboutDialog)
+	//}}AFX_MSG_MAP
 	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTW, 0, 0xFFFF, OnToolTipNotify)
 	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTA, 0, 0xFFFF, OnToolTipNotify)
-	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -102,7 +101,7 @@ BOOL CIcloginDlg::OnInitDialog()
 	if(FindAnotherInstance())
 	{
 		::PostQuitMessage(0);
-		return false;
+		return true;
 	}
 
 	// Set the icon for this dialog.  The framework does this automatically
@@ -111,17 +110,51 @@ BOOL CIcloginDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 	
 	// TODO: Add extra initialization here
+	SetupLocalizedText();
 
 	// Configure it if this is the first time.
 	if(!CConfiguration::GetIsConfigured())
 	{
+		g_log.Log("First start.");
 		CConfigurationDialog config_dialog;
-		config_dialog.DoModal();
+		if(config_dialog.DoModal() != IDOK)
+		{
+			// Without configuration, it's not much we can do.
+			g_log.Log("No configuration. Have to quit.");
+			EndDialog(IDCANCEL);
+			return true;
+		}
+		
 		CConfiguration::SetIsConfigured(true);
+	}
+
+	if(CConfiguration::GetStartHidden())
+	{
+//		SetWindowPos(NULL, 0,0,0,0, SWP_HIDEWINDOW | SWP_NOZORDER | 
+//			SWP_NOMOVE  | SWP_NOSIZE );
+//		ModifyStyle(WS_VISIBLE, 0);
 	}
 
 	m_trayicon.Init(this);
 
+	EnableToolTips(true);
+	
+	SetLoginStatus(0);
+
+	if(CConfiguration::GetLoginAtStartup() && !CConfiguration::GetUsername().IsEmpty())
+		StartLoginThread(this);
+
+	SetupLoginTimer();
+	m_updatetimer = SetTimer(UPDATETIMER, 
+			CConfiguration::GetUpdateTimersInterval()*1000, 
+			NULL);
+
+	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+
+void CIcloginDlg::SetupLocalizedText()
+{
 	CString buttontext;
 	buttontext.LoadString(IDS_LOGINBUTTONTEXT);
 	m_loginbutton.SetWindowText(buttontext);
@@ -137,21 +170,6 @@ BOOL CIcloginDlg::OnInitDialog()
 	CString window_title;
 	window_title.LoadString(IDS_DIALOGTITLE);
 	SetWindowText(window_title);
-	
-	EnableToolTips(true);
-	
-	SetLoginStatus(0);
-
-	if(CConfiguration::GetLoginAtStartup() && !CConfiguration::GetUsername().IsEmpty())
-		StartLoginThread(this);
-
-	SetupLoginTimer();
-	m_updatetimer = SetTimer(UPDATETIMER, 
-			CConfiguration::GetUpdateTimersInterval()*1000, 
-			NULL);
-
-
-	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
 // If you add a minimize button to your dialog, you will need the code below
@@ -211,6 +229,7 @@ LRESULT CIcloginDlg::OnLoginStarted(WPARAM, LPARAM)
 
 LRESULT CIcloginDlg::OnLoginSucceeded(WPARAM, LPARAM)
 {
+	g_log.Log("Login succeded.");
 	m_failedlastlogin = false;
 	DisplayMessage(IDS_LOGINSUCCEEDED);
 	m_messagetext2.SetWindowText(_T(""));
@@ -220,6 +239,7 @@ LRESULT CIcloginDlg::OnLoginSucceeded(WPARAM, LPARAM)
 
 LRESULT CIcloginDlg::OnLoginFailed(WPARAM, LPARAM)
 {
+	g_log.Log("Login failed.");
 	m_failedlastlogin = true;
 	DisplayMessage(IDS_LOGINFAILED);
 	m_messagetext2.SetWindowText(_T(""));
@@ -231,8 +251,8 @@ LRESULT CIcloginDlg::OnLoginFailed(WPARAM, LPARAM)
 LRESULT CIcloginDlg::OnLoginAlreadyLogin(WPARAM, LPARAM)
 {
 	m_failedlastlogin = false;
-	// DisplayMessage(IDS_LOGINALREADYLOGIN);
-	DisplayMessage(IDS_LOGINSUCCEEDED);
+	DisplayMessage(IDS_LOGINALREADYLOGIN);
+	// DisplayMessage(IDS_LOGINSUCCEEDED);
 	m_messagetext2.SetWindowText(_T(""));
 	SetLoginStatus(1);
 	return 0;
@@ -246,6 +266,7 @@ LRESULT CIcloginDlg::OnLogoutStarted(WPARAM, LPARAM)
 
 LRESULT CIcloginDlg::OnLogoutFailed(WPARAM, LPARAM)
 {
+	g_log.Log("Logout failed.");
 	DisplayMessage(IDS_LOGOUTFAILED);
 	m_messagetext2.SetWindowText(_T(""));
 	SetLoginStatus(0);
@@ -254,6 +275,7 @@ LRESULT CIcloginDlg::OnLogoutFailed(WPARAM, LPARAM)
 
 LRESULT CIcloginDlg::OnLogoutSucceeded(WPARAM, LPARAM)
 {
+	g_log.Log("Logout succeded.");
 	m_failedlastlogin = false;
 	DisplayMessage(IDS_LOGOUTSUCCEEDED);
 	m_messagetext2.SetWindowText(_T(""));
@@ -507,16 +529,16 @@ void CIcloginDlg::OnSize(UINT nType, int cx, int cy)
 	
 	TRACE2(" cx=%d. cy=%d\n", cx, cy);
 
-	if(m_startingup && 
-		CConfiguration::GetStartHidden() && 
-		nType == SIZE_RESTORED)
+	if(m_startingup && nType == SIZE_RESTORED && CConfiguration::GetStartHidden())
 	{
-		// To force ourself into hiding. 
+	    // To force ourself into hiding.
 		// There must be a better way to do it!
-		PostMessage(WM_SIZE, SIZE_MINIMIZED); 
+        PostMessage(WM_SIZE, SIZE_MINIMIZED);
+//		ShowWindow(SW_MINIMIZE); 
+//      ShowWindow(SW_HIDE); 
 		m_startingup = false;
 	}
-	if(nType == SIZE_MINIMIZED)
+	else if(nType == SIZE_MINIMIZED)
 	{
 		ShowWindow(SW_HIDE);
 	}
@@ -680,8 +702,9 @@ BOOL CIcloginDlg::FindAnotherInstance()
 			{
 				if(msg.wParam == 0)
 				{
+					g_log.Log("Detecting already running instance. ");
 					HWND other_instance = (HWND)msg.lParam;
-//	// But since the user wants one of us, let's pop up the other one.
+					// But since the user wants one of us, let's pop up the other one.
 					// It can't do it self since only certain windows are allowed 
 					// to do ShowWindow on Windows 2000 and Windows 98.
 					::ShowWindow(other_instance, SW_SHOWNORMAL);

@@ -117,9 +117,11 @@ bool CComHemConnection::Is_loggined() const
 bool CComHemConnection::Login() const
 {
 	m_parent_window->PostMessage(IC_LOGINSTARTED);
+	g_log.Log("Starting login...");
 
 	if(Is_loggined())
 	{
+		g_log.Log("Already logged in.");
 		m_parent_window->PostMessage(IC_LOGINALREADYLOGIN);
 		return true;
 	}
@@ -129,6 +131,7 @@ bool CComHemConnection::Login() const
 	// Detect login method
 	if(m_login_method == LOGIN_METHOD_UNKNOWN)
 	{
+		g_log.Log("Trying to detect login method.");
 		try {
 			GetUrl(internet_session, CConfiguration::GetLoginHost(),
 				"/", page);
@@ -136,10 +139,12 @@ bool CComHemConnection::Login() const
 			if(page.Find("login.php3") != -1)
 			{
 				m_login_method = LOGIN_METHOD_OLD;
+				g_log.Log("Detecting 'old' login method.");
 			}
 			else if(page.Find("sd/") != -1)
 			{
 				m_login_method = LOGIN_METHOD_NEW;
+				g_log.Log("Detecting 'new' login method.");
 			}
 		} catch (...) {
 			m_parent_window->PostMessage(IC_LOGINFAILED);
@@ -202,6 +207,7 @@ bool CComHemConnection::Login() const
 
 bool CComHemConnection::Login_old_way(CInternetSession &internet_session)
 {
+	g_log.Log("Loggin in with old method.");
 	CString page;
 	try {
 		GetUrl(internet_session, CConfiguration::GetLoginHost(),
@@ -246,6 +252,7 @@ bool CComHemConnection::Login_old_way(CInternetSession &internet_session)
 
 bool CComHemConnection::Login_new_way(CInternetSession &internet_session)
 {
+	g_log.Log("Loggin in with new method.");
 	try {
 		VisitUrl(internet_session, CConfiguration::GetLoginHost(), _T("/sd/init"));
 	} catch (...) {
@@ -264,7 +271,8 @@ bool CComHemConnection::Login_new_way(CInternetSession &internet_session)
 
 bool CComHemConnection::Logout() const
 {
-	
+	g_log.Log("Loggin out.");
+
 	m_parent_window->PostMessage(IC_LOGOUTSTARTED);
 	CICInternetSession internet_session(m_parent_window);
 	try {
@@ -301,6 +309,8 @@ void CComHemConnection::GetUrl(CInternetSession& internet_session,
 {
 	auto_ptr<CHttpConnection> http_connection;
 	auto_ptr<CHttpFile> http_file;
+
+	g_log.Log("Going to http://"+host+file);
 
 	try {
 		http_connection = auto_ptr<CHttpConnection>(
@@ -377,6 +387,7 @@ bool CComHemConnection::PostLogin(CInternetSession &internet_session,
 	postdata += "password=";
 	postdata += CConfiguration::GetPassword(); // (should be url-encoded)
 
+	g_log.Log("Posting to http://"+CConfiguration::GetLoginHost()+login_page);
 	try {
 		http_connection = auto_ptr<CHttpConnection>(
 			internet_session.GetHttpConnection(

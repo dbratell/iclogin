@@ -34,6 +34,15 @@ public:
 	static void SetStartHidden(bool do_it);
 	static const bool GetIsConfigured();
 	static void SetIsConfigured(bool do_it);
+	static const bool GetAutoStart();
+	static void SetAutoStart(bool do_it);
+	static const bool GetLogToFile();
+	static void SetLogToFile(bool do_it);
+	static const CString GetLogFile();
+	static void SetLogFile(const CString &filename);
+
+	static void CleanRegistry();
+
 
 private:
 	CConfiguration();
